@@ -1,0 +1,3 @@
+[submodule "apps/k8s-mediaserver-operator"]
+	path = apps/k8s-mediaserver-operator
+	url = git@github.com:tylermarques/k8s-mediaserver-operator.git

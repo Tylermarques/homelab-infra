@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -v
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mealie-api
+  name: mealie-api
+spec:
+  ports:
+    - name: "9000"
+      port: 9000
+      targetPort: 9000
+  selector:
+    io.kompose.service: mealie-api
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -v
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mealie-api
+  name: mealie-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mealie-api
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -v
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: mealie-api
+    spec:
+      containers:
+        - env:
+            - name: ALLOW_SIGNUP
+              value: "true"
+            - name: BASE_URL
+              value: https://mealie.tylermarques.com
+            - name: MAX_WORKERS
+              value: "1"
+            - name: PGID
+              value: "911"
+            - name: PUID
+              value: "911"
+            - name: TZ
+              value: America/Toronto
+            - name: WEB_CONCURRENCY
+              value: "1"
+          image: hkotel/mealie:api-v1.0.0beta-5
+          name: mealie-api
+          volumeMounts:
+            - mountPath: /app/data/
+              name: mealie-data
+      restartPolicy: Always
+      volumes:
+        - name: mealie-data
+          persistentVolumeClaim:
+            claimName: mealie-claim
+status: {}

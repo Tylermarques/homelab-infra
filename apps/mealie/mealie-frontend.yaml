@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -v
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mealie-frontend
+  name: mealie-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mealie-frontend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -v
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: mealie-frontend
+    spec:
+      containers:
+        - env:
+            - name: API_URL
+              value: http://mealie-api:9000
+          image: hkotel/mealie:frontend-v1.0.0beta-5
+          name: mealie-frontend
+          ports:
+            - containerPort: 3000
+          resources: {}
+          volumeMounts:
+            - mountPath: /app/data/
+              name: mealie-data
+      restartPolicy: Always
+      volumes:
+        - name: mealie-data
+          persistentVolumeClaim:
+            claimName: mealie-claim
+status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -v
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mealie-frontend
+  name: mealie-frontend
+spec:
+  ports:
+    - name: "9925"
+      port: 9925
+      targetPort: 3000
+  selector:
+    io.kompose.service: mealie-frontend
+status:
+  loadBalancer: {}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: mealie-ingress
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`mealie.tylermarques.com`)
+      priority: 10
+      services:
+        - name: mealie-frontend
+          port: 9925
+  tls:
+    secretName: star-tylermarques-prod-tls

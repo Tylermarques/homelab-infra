@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: star-tylermarques-com
+  namespace: default
+spec:
+  secretName: star-tylermarques-prod-tls
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  commonName: "*.tylermarques.com"
+  dnsNames:
+    - "tylermarques.com"
+    - "*.tylermarques.com"

@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gitlab-external-ingress
+  namespace: default 
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`gitlab.tylermarques.com`)
+      priority: 10
+      services:
+        - name: gitlab-external
+          port: 80
+# tls:
+#   secretName: argocd-local-tylermarques-com

@@ -1,0 +1,14 @@
+plugin: community.general.proxmox
+user: root@pam
+url: https://192.168.0.71:8006
+validate_certs: false
+token_id: ansible-2
+token_secret: c0ab3357-688d-4a0b-82c2-605b9b5f2a17
+want_facts: true
+want_proxmox_nodes_ansible_host: false
+keyed_groups:
+  - key: proxmox_tags_parsed
+    seperator: ""
+    prefix: groups
+groups:
+  control: "'control' in (proxmox_tags_parsed|list)"

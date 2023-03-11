@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ntfy-ingress
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`ntfy.tylermarques.com`)
+      priority: 10
+      services:
+        - name: ntfy
+          port: 80
+# tls:
+#   secretName: argocd-local-tylermarques-com

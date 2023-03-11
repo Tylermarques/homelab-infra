@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -v
+    kompose.version: 1.26.0 (40646f47)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: transmission-openvpn
+  name: transmission-openvpn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: transmission-openvpn
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -v
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: transmission-openvpn
+    spec:
+      containers:
+        - env:
+            - name: LOCAL_NETWORK
+              value: 192.168.0.0/16,10.42.0.0/16
+            - name: OPENVPN_CONFIG
+              value: ca_montreal
+            - name: OPENVPN_PASSWORD
+              value: ${PIA_PASSWORD}
+            - name: OPENVPN_USERNAME
+              value: ${PIA_USERNAME}
+            - name: OPENVPN_PROVIDER
+              value: PIA
+            - name: PEER_DNS
+              value: "true"
+          image: haugene/transmission-openvpn
+          name: transmission-openvpn
+          ports:
+            - containerPort: 9091
+          resources: {}
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          volumeMounts:
+            - mountPath: /data
+              name: nfs-mount
+      restartPolicy: Always
+      volumes:
+        - name: nfs-mount
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/library/downloads
+status: {}
