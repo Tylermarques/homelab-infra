@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idrac-fan-control-deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: idrac-fan-control
+  template:
+    metadata:
+      labels:
+        app: idrac-fan-control
+    spec:
+      containers:
+        - env:
+            - name: IDRAC_HOST
+              value: "192.168.0.120"
+            - name: IDRAC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: idrac-creds
+                  key: user
+            - name: IDRAC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: idrac-creds
+                  key: password
+            - name: FAN_SPEED
+              value: "40"
+            - name: CPU_TEMPERATURE_THRESHOLD
+              value: "53"
+          image: tigerblue77/dell_idrac_fan_controller
+          name: idrac-fan-control
+      restartPolicy: Always

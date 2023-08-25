@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-ingress
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`grafana.local.tylermarques.com`)
+      priority: 10
+      services:
+        - name: grafana
+          port: 80
+  tls:
+    secretName: star-local-tylermarques-prod-tls

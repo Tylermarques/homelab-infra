@@ -1,0 +1,14 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: star-local-tylermarques-com
+  namespace: default
+spec:
+  secretName: star-local-tylermarques-prod-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.local.tylermarques.com"
+  dnsNames:
+    - "*.local.tylermarques.com"

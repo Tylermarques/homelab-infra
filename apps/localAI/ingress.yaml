@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: local-ai-ingress
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`local-ai.local.tylermarques.com`)
+      priority: 10
+      services:
+        - name: local-ai
+          port: 8080
+  tls:
+    secretName: star-local-tylermarques-prod-tls
