@@ -1,2 +1,5 @@
 **/.idea/
 **/*secret.yaml
+
+# File for idrac
+**/enterprise-numbers.txt

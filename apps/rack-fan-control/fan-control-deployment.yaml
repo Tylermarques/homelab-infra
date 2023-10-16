@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idrac-fan-control-deployment
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: idrac-fan-control
+  template:
+    metadata:
+      labels:
+        app: idrac-fan-control
+    spec:
+      containers:
+        - env:
+            - name: HASS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: hass-creds
+                  key: url
+            - name: HASS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hass-creds
+                  key: token
+            - name: IDRAC_HOST
+              value: "192.168.0.120"
+            - name: IDRAC_USER
+              valueFrom:
+                secretKeyRef:
+                  name: idrac-creds
+                  key: user
+            - name: IDRAC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: idrac-creds
+                  key: password
+          image: tprmarques/fan-control:latest
+          name: idrac-fan-control
+      restartPolicy: Always
