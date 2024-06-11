@@ -1,0 +1,9 @@
+resources:
+  - ./../base
+  - ./ingress.yaml
+namePrefix: dev-
+namespace: u-the-bomb-com-dev
+images:
+  - name: u-the-bomb-com
+    newName: ghcr.io/tylermarques/u-the-bomb-com
+    newTag: dev

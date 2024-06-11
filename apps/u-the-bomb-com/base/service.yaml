@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: u-the-bomb-com
+  labels:
+    app: u-the-bomb-com
+spec:
+  ports:
+    - name: u-the-bomb-com
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: u-the-bomb-com
