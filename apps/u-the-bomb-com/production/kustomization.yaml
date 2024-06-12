@@ -6,4 +6,4 @@ namespace: u-the-bomb-com-prod
 images:
   - name: u-the-bomb-com
     newName: ghcr.io/tylermarques/u-the-bomb-com
-    newTag: 011e4159d8906a4ca96a1beddffd9676882fe458
+    newTag: 7a90b5bf9807a81a712c8a49df5487c68651f650
