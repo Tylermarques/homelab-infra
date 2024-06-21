@@ -7,7 +7,7 @@ spec:
     - web
   routes:
     - kind: Rule
-      match: Host(`u-the-bomb.com`)
+      match: Host(`tylermarques.com`)
       priority: 10
       services:
         - name: prod-tylermarques-com
