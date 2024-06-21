@@ -2,7 +2,7 @@ resources:
   - ./../base
   - ./ingress.yaml
 namePrefix: prod-
-namespace: tylermarques-com-prod
+namespace: tylermarques-com
 images:
   - name: tylermarques-com
     newName: ghcr.io/tylermarques/tylermarques-com
