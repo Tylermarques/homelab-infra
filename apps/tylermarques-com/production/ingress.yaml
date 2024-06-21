@@ -1,0 +1,14 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: tylermarques-com
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`u-the-bomb.com`)
+      priority: 10
+      services:
+        - name: prod-tylermarques-com
+          port: 3000

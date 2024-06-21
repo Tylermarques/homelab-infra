@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: tylermarques-com
+  labels:
+    app: tylermarques-com
+spec:
+  ports:
+    - name: tylermarques-com
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: tylermarques-com

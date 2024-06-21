@@ -1,0 +1,9 @@
+resources:
+  - ./../base
+  - ./ingress.yaml
+namePrefix: dev-
+namespace: tylermarques-com-dev
+images:
+  - name: tylermarques-com
+    newName: ghcr.io/tylermarques/tylermarques-com
+    newTag: dev
