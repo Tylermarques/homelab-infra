@@ -5,6 +5,7 @@ metadata:
 spec:
   entryPoints:
     - web
+    - websecure
   routes:
     - kind: Rule
       match: Host(`tylermarques.com`)
@@ -12,3 +13,5 @@ spec:
       services:
         - name: prod-tylermarques-com
           port: 3000
+      middlewares:
+        - name: redirect-https
