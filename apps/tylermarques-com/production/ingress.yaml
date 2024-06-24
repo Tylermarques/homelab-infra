@@ -8,7 +8,7 @@ spec:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`tylermarques.com`)
+      match: Host(`tylermarques.com`) || Host(`www.tylermarques.com`)
       priority: 10
       services:
         - name: prod-tylermarques-com
