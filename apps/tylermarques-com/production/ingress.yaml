@@ -4,7 +4,6 @@ metadata:
   name: tylermarques-com
 spec:
   entryPoints:
-    - web
     - websecure
   routes:
     - kind: Rule
@@ -13,5 +12,3 @@ spec:
       services:
         - name: prod-tylermarques-com
           port: 3000
-      middlewares:
-        - name: redirect-https
