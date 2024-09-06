@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-worker
+  template:
+    metadata:
+      labels:
+        app: celery-worker
+    spec:
+      containers:
+      - name: celery-worker
+        image: meeting-tools-worker:latest
+        imagePullPolicy: IfNotPresent
+        command: ["celery", "-A", "tasks", "worker", "--loglevel=info", "--concurrency", "1"]
+        env:
+        - # TODO: Ask Tyler how to manage secrets
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+      restartPolicy: Always
