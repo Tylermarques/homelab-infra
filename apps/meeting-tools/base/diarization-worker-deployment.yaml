@@ -1,46 +1,58 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: celery-beat
+  name: meeting-tools-diarization-worker
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: celery-beat
+      app: meeting-tools-diarization-worker
   template:
     metadata:
       labels:
-        app: celery-beat
+        app: meeting-tools-diarization-worker
     spec:
       containers:
-      - name: celery-beat
-        image: meeting-tools-directory-watcher:latest
+      - name: meeting-tools-diarization-worker
+        image: meeting-tools-worker:latest
         imagePullPolicy: IfNotPresent
-        command: ["celery", "-A", "tasks", "beat", "--loglevel=info"]
+        command: ["celery", "-A", "tasks", "worker", "--loglevel=info", "--concurrency", "1"]
         env:
-          - name: DATA_DIR
-            valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
-                key: data
           - name: MONGODB_URI
             valueFrom:
               secretKeyRef:
                 name: meeting-tools-secrets
                 key: mongo
+          - name: DATA_DIR
+            valueFrom:
+              secretKeyRef:
+                name: meeting-tools-secrets
+                key: data
           - name: HUGGINGFACE_TOKEN
             valueFrom:
               secretKeyRef:
                 name: meeting-tools-secrets
                 key: huggingface
+          - name: CELERY_BROKER_URL
+            valueFrom:
+              secretKeyRef:
+                name: meeting-tools-secrets
+                key: celery
           - name: FASTAPI_URL
             valueFrom:
               secretKeyRef:
                 name: meeting-tools-secrets
                 key: fastapi
+          - name: MODEL_FILE
+            valueFrom:
+              secretKeyRef:
+                name: meeting-tools-secrets
+                key: model
         volumeMounts:
         - name: data-volume
           mountPath: /app/data
+        - name: model-mount
+          mountpath: /app/whisper-models
       volumes:
       - name: data-volume
         emptyDir: {}

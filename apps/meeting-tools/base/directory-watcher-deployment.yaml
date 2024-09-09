@@ -1,58 +1,46 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: celery-worker
+  name: meeting-tools-directory-watcher
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: celery-worker
+      app: meeting-tools-directory-watcher
   template:
     metadata:
       labels:
-        app: celery-worker
+        app: meeting-tools-directory-watcher
     spec:
       containers:
-      - name: celery-worker
-        image: meeting-tools-worker:latest
+      - name: meeting-tools-directory-watcher
+        image: meeting-tools-directory-watcher:latest
         imagePullPolicy: IfNotPresent
-        command: ["celery", "-A", "tasks", "worker", "--loglevel=info", "--concurrency", "1"]
+        command: ["celery", "-A", "tasks", "beat", "--loglevel=info"]
         env:
-          - name: MONGODB_URI
-            valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
-                key: mongo
           - name: DATA_DIR
             valueFrom:
               secretKeyRef:
                 name: meeting-tools-secrets
                 key: data
+          - name: MONGODB_URI
+            valueFrom:
+              secretKeyRef:
+                name: meeting-tools-secrets
+                key: mongo
           - name: HUGGINGFACE_TOKEN
             valueFrom:
               secretKeyRef:
                 name: meeting-tools-secrets
                 key: huggingface
-          - name: CELERY_BROKER_URL
-            valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
-                key: celery
           - name: FASTAPI_URL
             valueFrom:
               secretKeyRef:
                 name: meeting-tools-secrets
                 key: fastapi
-          - name: MODEL_FILE
-            valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
-                key: model
         volumeMounts:
         - name: data-volume
           mountPath: /app/data
-        - name: model-mount
-          mountpath: /app/whisper-models
       volumes:
       - name: data-volume
         emptyDir: {}

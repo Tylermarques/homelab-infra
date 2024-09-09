@@ -31,12 +31,13 @@ spec:
                   name: meeting-tools-secrets
                   key: mongo
           volumeMounts:
-            - name: backend-data
+            - name: data-nfs-mount
               mountPath: /app/data
       volumes:
-        - name: backend-data
-          persistentVolumeClaim:
-            claimName: backend-pvc
+        - name: data-nfs-mount
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/libray/meeting-tools/data # TODO: confirm this is the correct path
 ---
 apiVersion: v1
 kind: Service
@@ -50,15 +51,3 @@ spec:
   ports:
     - port: 8000
       targetPort: 8000
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: backend-pvc
-  namespace: default
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
