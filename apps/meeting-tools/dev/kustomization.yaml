@@ -10,9 +10,19 @@ images:
   - name: meeting-tools-frontend-dev
     newName: ghcr.io/tylermarques/meeting-tools-frontend-dev
     newTag: dev
-  - name: meeting-tools-directory_watcher
-    newName: ghcr.io/tylermarques/meeting-tools-directory_watcher
+  - name: meeting-tools-directory-watcher
+    newName: ghcr.io/tylermarques/meeting-tools-directory-watcher
     newTag: dev
   - name: meeting-tools-worker
     newName: ghcr.io/tylermarques/meeting-tools-worker
     newTag: dev
+secretGenerator: 
+  did you remember to fill in  # Manually fill in below secrets when applying (& delete this and the previous lines)
+ - name: meeting-tools-secrets
+ - literals:
+    - data=
+    - mongodb=
+    - hugginface=
+    - fastapi=
+    - celery=
+    - model=

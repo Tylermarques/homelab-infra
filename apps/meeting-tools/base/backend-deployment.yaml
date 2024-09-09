@@ -20,7 +20,16 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - # TODO: Ask Tyler how to manage secrets
+            - name: DATA_DIR
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: data
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: mongo
           volumeMounts:
             - name: backend-data
               mountPath: /app/data

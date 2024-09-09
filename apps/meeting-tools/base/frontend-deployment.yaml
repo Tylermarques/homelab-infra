@@ -20,7 +20,11 @@ spec:
           ports:
             - containerPort: 3000
           env:
-            - # TODO: Ask Tyler how to manage secrets
+            - name: REACT_APP_BACKEND_URL
+              valueFrom:
+              secretKeyRef:
+                name: meeting-tools-secrets
+                key: fastapi
 ---
 apiVersion: v1
 kind: Service
