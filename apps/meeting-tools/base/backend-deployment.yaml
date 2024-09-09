@@ -22,13 +22,13 @@ spec:
           env:
             - name: DATA_DIR
               valueFrom:
-                secretKeyRef:
-                  name: meeting-tools-secrets
+                configMapKeyRef:
+                  name: meeting-tools-config
                   key: data
             - name: MONGODB_URI
               valueFrom:
-                secretKeyRef:
-                  name: meeting-tools-secrets
+                configMapKeyRef:
+                  name: meeting-tools-config
                   key: mongo
           volumeMounts:
             - name: data-nfs-mount

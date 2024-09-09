@@ -18,26 +18,32 @@ spec:
         imagePullPolicy: IfNotPresent
         command: ["celery", "-A", "tasks", "beat", "--loglevel=info"]
         env:
-          - name: DATA_DIR
-            valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
-                key: data
+          #Configuration variables
           - name: MONGODB_URI
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: mongo
-          - name: HUGGINGFACE_TOKEN
+          - name: DATA_DIR
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
-                key: huggingface
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: data
+          - name: CELERY_BROKER_URL
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: celery
           - name: FASTAPI_URL
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: fastapi
+          - name: MODEL_FILE
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: model
         volumeMounts:
         - name: data-volume
           mountPath: /app/data

@@ -18,21 +18,17 @@ spec:
         imagePullPolicy: IfNotPresent
         command: ["celery", "-A", "tasks", "worker", "--loglevel=info", "--concurrency", "1"]
         env:
+          #Configuration variables
           - name: MONGODB_URI
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: mongo
           - name: DATA_DIR
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: data
-          - name: HUGGINGFACE_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
-                key: huggingface
           - name: CELERY_BROKER_URL
             valueFrom:
               secretKeyRef:
@@ -48,6 +44,12 @@ spec:
               secretKeyRef:
                 name: meeting-tools-secrets
                 key: model
+          # Secret variables
+          - name: HUGGINGFACE_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: meeting-tools-secrets
+                key: huggingface
         volumeMounts:
         - name: data-volume
           mountPath: /app/data

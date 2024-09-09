@@ -22,8 +22,8 @@ spec:
           env:
             - name: REACT_APP_BACKEND_URL
               valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: fastapi
 ---
 apiVersion: v1

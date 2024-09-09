@@ -13,7 +13,7 @@ spec:
         - name: frontend-service
           port: 3000
     - kind: Rule
-      match: Host(`dev.MEETING_TOOLS_URL.com/api`) # TODO: find associated host domain for backend
+      match: Host(`MEETING_TOOLS_URL.com/api`) # TODO: find associated host domain for backend
       priority: 10
       services:
         - name: backend-service
