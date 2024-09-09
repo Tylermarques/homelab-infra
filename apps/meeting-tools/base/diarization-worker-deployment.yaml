@@ -31,18 +31,18 @@ spec:
                 key: data
           - name: CELERY_BROKER_URL
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: celery
           - name: FASTAPI_URL
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: fastapi
           - name: MODEL_FILE
             valueFrom:
-              secretKeyRef:
-                name: meeting-tools-secrets
+              configMapKeyRef:
+                name: meeting-tools-config
                 key: model
           # Secret variables
           - name: HUGGINGFACE_TOKEN

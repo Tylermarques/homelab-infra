@@ -1,10 +1,10 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: meeting-tools
+  name: meeting-tools-dev
 spec:
   entryPoints:
-    - web
+    - web # TODO: switch this to websecure when appropriate
   routes:
     - kind: Rule
       match: Host(`dev.MEETING_TOOLS_URL.com`) # TODO: find associated host domain for frontend
