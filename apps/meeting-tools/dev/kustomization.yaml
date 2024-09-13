@@ -28,7 +28,8 @@ configMapGenerator:
     - mongodb=
 
 secretGenerator: 
-  did you remember to fill in  # Manually fill in below secrets when applying (& delete this and the previous lines)
+  did you remember to fill in  # Manually fill in below secrets when applying (& delete this line)
  - name: meeting-tools-secrets
  - literals:
     - hugginface=
+    - jwt=

@@ -20,6 +20,7 @@ spec:
           ports:
             - containerPort: 8000
           env:
+            # configuration variables
             - name: DATA_DIR
               valueFrom:
                 configMapKeyRef:
@@ -30,14 +31,20 @@ spec:
                 configMapKeyRef:
                   name: meeting-tools-config
                   key: mongo
+            # secret variables
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: jwt
           volumeMounts:
-            - name: data-nfs-mount
+            - name: data-volume
               mountPath: /app/data
       volumes:
-        - name: data-nfs-mount
+        - name: data-volume
           nfs:
             server: 192.168.0.71
-            path: /main/plex/libray/meeting-tools/data # TODO: confirm this is the correct path
+            path: /main/plex/libray/meeting-tools/data
 ---
 apiVersion: v1
 kind: Service
@@ -51,3 +58,4 @@ spec:
   ports:
     - port: 8000
       targetPort: 8000
+

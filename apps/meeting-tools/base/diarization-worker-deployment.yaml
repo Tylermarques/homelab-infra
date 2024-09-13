@@ -51,11 +51,17 @@ spec:
                 name: meeting-tools-secrets
                 key: huggingface
         volumeMounts:
-        - name: data-volume
-          mountPath: /app/data
-        - name: model-mount
-          mountpath: /app/whisper-models
+          - name: data-volume
+            mountPath: /app/data
+          - name: model-volume
+            mountPath: /app/whisper-models
       volumes:
-      - name: data-volume
-        emptyDir: {}
+        - name: data-volume
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/libray/meeting-tools/data
+        - name: model-volume
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/libray/meeting-tools/models
       restartPolicy: Always
