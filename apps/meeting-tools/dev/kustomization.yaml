@@ -3,17 +3,16 @@ resources:
   - ./ingress.yaml
 namePrefix: dev-
 namespace: meeting-tools
-
 images:
   - name: meeting-tools-backend-dev
     newName: ghcr.io/marquescg/meeting-tools-backend-dev
-    newTag: dev
+    newTag: 9c3625a4c549154bc75bb8d53654565bc7e894c7
   - name: meeting-tools-frontend-dev
     newName: ghcr.io/marquescg/meeting-tools-frontend-dev
-    newTag: dev
+    newTag: 9c3625a4c549154bc75bb8d53654565bc7e894c7
   - name: meeting-tools-directory-watcher
     newName: ghcr.io/marquescg/meeting-tools-directory-watcher
-    newTag: dev
+    newTag: 9c3625a4c549154bc75bb8d53654565bc7e894c7
   - name: meeting-tools-worker
     newName: ghcr.io/marquescg/meeting-tools-worker
-    newTag: dev
+    newTag: 9c3625a4c549154bc75bb8d53654565bc7e894c7
