@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meeting-tools-directory-watcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: meeting-tools-directory-watcher
+  template:
+    metadata:
+      labels:
+        app: meeting-tools-directory-watcher
+    spec:
+      containers:
+      - name: meeting-tools-directory-watcher
+        image: meeting-tools-directory-watcher:latest
+        imagePullPolicy: IfNotPresent
+        command: ["celery", "-A", "tasks", "beat", "--loglevel=info"]
+        env:
+          #Configuration variables
+          - name: MONGODB_URI
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: mongo
+          - name: DATA_DIR
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: data
+          - name: CELERY_BROKER_URL
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: celery
+          - name: FASTAPI_URL
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: fastapi
+          - name: MODEL_FILE
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: model
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+      restartPolicy: Always

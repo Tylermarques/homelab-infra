@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: meeting-tools-backend-dev:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            # configuration variables
+            - name: DATA_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: meeting-tools-config
+                  key: data
+            - name: MONGODB_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: meeting-tools-config
+                  key: mongo
+            # secret variables
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: jwt
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+      volumes:
+        - name: data-volume
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/libray/meeting-tools/data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+

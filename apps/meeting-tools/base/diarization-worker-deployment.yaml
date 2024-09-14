@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meeting-tools-diarization-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: meeting-tools-diarization-worker
+  template:
+    metadata:
+      labels:
+        app: meeting-tools-diarization-worker
+    spec:
+      containers:
+      - name: meeting-tools-diarization-worker
+        image: meeting-tools-worker:latest
+        imagePullPolicy: IfNotPresent
+        command: ["celery", "-A", "tasks", "worker", "--loglevel=info", "--concurrency", "1"]
+        env:
+          #Configuration variables
+          - name: MONGODB_URI
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: mongo
+          - name: DATA_DIR
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: data
+          - name: CELERY_BROKER_URL
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: celery
+          - name: FASTAPI_URL
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: fastapi
+          - name: MODEL_FILE
+            valueFrom:
+              configMapKeyRef:
+                name: meeting-tools-config
+                key: model
+          # Secret variables
+          - name: HUGGINGFACE_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: meeting-tools-secrets
+                key: huggingface
+        volumeMounts:
+          - name: data-volume
+            mountPath: /app/data
+          - name: model-volume
+            mountPath: /app/whisper-models
+      volumes:
+        - name: data-volume
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/libray/meeting-tools/data
+        - name: model-volume
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/libray/meeting-tools/models
+      restartPolicy: Always

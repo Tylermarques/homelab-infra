@@ -1,0 +1,5 @@
+resources:
+  - backend-deployment.yaml
+  - frontend-deployment.yaml
+  - directory-watcher-deployment.yaml
+  - diarization-worker-deployment.yaml
