@@ -2,7 +2,7 @@ resources:
   - ./../base
   - ./ingress.yaml
 namePrefix: prod-
-namespace: meeting-tools-prod
+namespace: meeting-tools
 
 images:
   - name: meeting-tools-backend-dev
