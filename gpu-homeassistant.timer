@@ -1,0 +1,10 @@
+[Unit]
+Description=Send GPU temperature to homeassistant
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15sec
+
+[Install]
+WantedBy=timers.target
+

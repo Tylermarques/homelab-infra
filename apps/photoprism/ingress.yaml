@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: photoprism
+  namespace: photoprism
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`photoprism.tylermarques.com`)
+      priority: 10
+      services:
+        - name: photoprism
+          port: 80
+  tls:
+    secretName: photoprism-tylermarques-prod-tls

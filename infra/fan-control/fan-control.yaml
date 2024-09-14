@@ -1,0 +1,31 @@
+esphome:
+  name: homelab-fan-controller
+esp8266:
+  board: d1_mini
+# Enable logging
+logger:
+# Enable Home Assistant API
+api:
+  password: ""
+ota:
+  password: ""
+wifi:
+  ssid: "HanTy"
+  password: "BananaPancakeCrouton2020"
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Homelab-Fan-Controller"
+    password: "9YttPyutd5fK"
+captive_portal:
+# Example configuration entry
+output:
+  - platform: esp8266_pwm
+    pin: D0
+    inverted: true
+    frequency: 2500 Hz
+    id: pwm_output
+# Example usage in a light
+fan:
+  - platform: speed
+    output: pwm_output
+    name: "Rack Exhaust Fan"

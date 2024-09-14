@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: photoprism
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: photoprism-secrets
+  namespace: photoprism
+stringData:
+  PHOTOPRISM_ADMIN_PASSWORD: 46J!p!NpKJz#CNU5jFv@cuXtwuSL!BnirWw
+  PHOTOPRISM_DATABASE_DSN: root:AqEvznVhNZ@tcp(mariadb.default.svc.cluster.local:3306)/photoprism?charset=utf8mb4,utf8&parseTime=true
+  PHOTOPRISM_SITE_URL: https://photoprism.tylermarques.com
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: photoprism
+  namespace: photoprism
+spec:
+  selector:
+    matchLabels:
+      app: photoprism
+  serviceName: photoprism
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: photoprism
+    spec:
+      containers:
+      - name: photoprism
+        image: photoprism/photoprism:latest
+        env:
+        - name: PHOTOPRISM_DEBUG
+          value: "true"
+        - name: PHOTOPRISM_DATABASE_DRIVER
+          value: mysql
+        - name: PHOTOPRISM_HTTP_HOST
+          value: 0.0.0.0
+        - name: PHOTOPRISM_HTTP_PORT
+          value: "2342"
+        # Load database DSN & admin password from secret
+        envFrom:
+        - secretRef:
+            name: photoprism-secrets
+            optional: false
+        ports:
+        - containerPort: 2342
+          name: http
+        volumeMounts:
+        - mountPath: /photoprism/originals
+          name: originals
+        - mountPath: /photoprism/import
+          name: import
+        - mountPath: /photoprism/storage
+          name: storage
+        readinessProbe:
+          httpGet:
+            path: /api/v1/status
+            port: http
+      volumes:
+      - name: originals
+        nfs:
+          path: /main/plex/library/personal/originals
+          server: 192.168.0.71
+      - name: import
+        nfs:
+          path: /main/plex/library/personal/import
+          server: 192.168.0.71
+      - name: storage
+        nfs:
+          path: /main/plex/library/personal/storage
+          server: 192.168.0.71
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: photoprism
+  namespace: photoprism
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: photoprism

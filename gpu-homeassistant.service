@@ -1,0 +1,9 @@
+[Unit]
+Description=Update GPU temperature for Home Assistant
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/zsh -c 'source /home/tyler/.hass && /home/tyler/.local/bin/hass-cli state edit input_number.archlinux_gpu_temperature $(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader)'
+
+[Install]
+WantedBy=multi-user.target

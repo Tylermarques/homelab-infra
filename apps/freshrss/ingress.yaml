@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: freshrss
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`freshrss.tylermarques.com`)
+      priority: 10
+      services:
+        - name: freshrss-freshrss
+          port: 80

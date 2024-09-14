@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperless-ngx
+spec:
+  selector:
+    app: paperless-ngx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-ngx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paperless-ngx
+  template:
+    metadata:
+      labels:
+        app: paperless-ngx
+    spec:
+      containers:
+        - name: paperless-ngx-webserver
+          image: ghcr.io/paperless-ngx/paperless-ngx:latest
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: PAPERLESS_DATA_DIR
+              value: /paperless-data
+            - name: PAPERLESS_MEDIA_ROOT
+              value: /paperless-data
+            - name: PAPERLESS_CONSUMER_RECURSIVE
+              value: "true"
+            - name: PAPERLESS_TASK_WORKERS
+              value: "2"
+            - name: PAPERLESS_CONSUMPTION_DIR
+              value: /paperless-consume
+            - name: PAPERLESS_REDIS
+              value: redis://:Jm3I1hOGca@redis-master
+            - name: PAPERLESS_URL
+              value: http://paperless.local.tylermarques.com
+            - name: PAPERLESS_ADMIN_USER
+              value: tyler
+            - name: PAPERLESS_ADMIN_PASSWORD
+              value: omv&@LvVu5dc3&%Y8UiUYzpHY3QdyN
+          volumeMounts:
+            - mountPath: /paperless-data
+              name: paperless-data
+            - mountPath: /paperless-consume
+              name: paperless-consume
+      volumes:
+        - name: paperless-data
+          nfs:
+            path: /main/plex/paperless/data
+            server: 192.168.0.71
+        - name: paperless-consume
+          nfs:
+            path: /main/plex/paperless/consume
+            server: 192.168.0.71
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: paperless-ingress
+  namespace: default
+spec:
+  routes:
+    - kind: Rule
+      match: Host(`paperless.local.tylermarques.com`)
+      priority: 10
+      services:
+        - name: paperless-ngx
+          port: 80
