@@ -17,21 +17,3 @@ images:
   - name: meeting-tools-worker
     newName: ghcr.io/tylermarques/meeting-tools-worker
     newTag: blah 
-
-
-configMapGenerator:
-- name: meeting-tools-config
-  literals:
-    - fastapi=
-    - celery=
-    - model=
-    - data=
-    - mongodb=
-
-secretGenerator: 
-  did you remember to fill in  # Manually fill in below secrets when applying (& delete this line)
- - name: meeting-tools-secrets
- - literals:
-    - hugginface=
-    - jwt=
-

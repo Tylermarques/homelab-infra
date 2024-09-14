@@ -3,3 +3,18 @@ resources:
   - frontend-deployment.yaml
   - directory-watcher-deployment.yaml
   - diarization-worker-deployment.yaml
+
+configMapGenerator:
+- name: meeting-tools-config
+  literals: #TODO: define configuration variables
+    - fastapi=
+    - celery=
+    - model=
+    - data=
+    - mongodb=
+
+secretGenerator: 
+ - name: meeting-tools-secrets
+   literals:
+    - hugginface=
+    - jwt=
