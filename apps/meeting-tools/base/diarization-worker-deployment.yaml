@@ -59,9 +59,9 @@ spec:
         - name: data-volume
           nfs:
             server: 192.168.0.71
-            path: /main/plex/libray/meeting-tools/data
+            path: /main/plex/meeting-tools/data
         - name: model-volume
           nfs:
             server: 192.168.0.71
-            path: /main/plex/libray/meeting-tools/models
+            path: /main/plex/meeting-tools/models
       restartPolicy: Always

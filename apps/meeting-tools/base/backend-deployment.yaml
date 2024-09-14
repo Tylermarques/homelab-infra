@@ -44,7 +44,7 @@ spec:
         - name: data-volume
           nfs:
             server: 192.168.0.71
-            path: /main/plex/libray/meeting-tools/data
+            path: /main/plex/meeting-tools/data
 ---
 apiVersion: v1
 kind: Service
