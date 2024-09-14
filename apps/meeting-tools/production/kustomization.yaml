@@ -6,14 +6,14 @@ namespace: meeting-tools-prod
 
 images:
   - name: meeting-tools-backend-dev
-    newName: ghcr.io/tylermarques/meeting-tools-backend-dev
-    newTag: blah 
+    newName: ghcr.io/marquescg/meeting-tools-backend-dev
+    newTag: blah
   - name: meeting-tools-frontend-dev
-    newName: ghcr.io/tylermarques/meeting-tools-frontend-dev
-    newTag: blah 
+    newName: ghcr.io/marquescg/meeting-tools-frontend-dev
+    newTag: blah
   - name: meeting-tools-directory-watcher
-    newName: ghcr.io/tylermarques/meeting-tools-directory-watcher
-    newTag: blah 
+    newName: ghcr.io/marquescg/meeting-tools-directory-watcher
+    newTag: blah
   - name: meeting-tools-worker
-    newName: ghcr.io/tylermarques/meeting-tools-worker
-    newTag: blah 
+    newName: ghcr.io/marquescg/meeting-tools-worker
+    newTag: blah
