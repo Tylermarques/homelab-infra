@@ -13,6 +13,8 @@ spec:
       labels:
         app: frontend
     spec:
+      imagePullSecrets:
+        - name: gchrio-cred
       containers:
         - name: frontend
           image: meeting-tools-frontend-dev:latest

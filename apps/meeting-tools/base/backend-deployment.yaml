@@ -45,6 +45,8 @@ spec:
           nfs:
             server: 192.168.0.71
             path: /main/plex/meeting-tools/data
+      imagePullSecrets:
+        - name: gchrio-cred
 ---
 apiVersion: v1
 kind: Service
@@ -58,4 +60,3 @@ spec:
   ports:
     - port: 8000
       targetPort: 8000
-
