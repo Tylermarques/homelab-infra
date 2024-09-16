@@ -5,10 +5,10 @@ namePrefix: prod-
 namespace: meeting-tools
 images:
   - name: meeting-tools-backend-dev
-    newName: ghcr.io/marquescg/meeting-tools-backend-dev
+    newName: ghcr.io/marquescg/meeting-tools-backend
     newTag: blah
   - name: meeting-tools-frontend-dev
-    newName: ghcr.io/marquescg/meeting-tools-frontend-dev
+    newName: ghcr.io/marquescg/meeting-tools-frontend
     newTag: blah
   - name: meeting-tools-directory-watcher
     newName: ghcr.io/marquescg/meeting-tools-directory-watcher
