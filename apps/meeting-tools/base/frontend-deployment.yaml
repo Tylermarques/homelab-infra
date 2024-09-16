@@ -26,7 +26,7 @@ spec:
               valueFrom:
               configMapKeyRef:
                 name: meeting-tools-config
-                key: fastapi
+                key: backendurl
 ---
 apiVersion: v1
 kind: Service

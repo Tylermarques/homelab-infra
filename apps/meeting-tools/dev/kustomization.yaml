@@ -15,4 +15,13 @@ images:
     newTag: 0903d89d5f69546652aa6ddf855c91a4026d9ab7
   - name: meeting-tools-worker
     newName: ghcr.io/marquescg/meeting-tools-worker
-    newTag: 0903d89d5f69546652aa6ddf855c91a4026d9ab7
+    newTag: 9c3625a4c549154bc75bb8d53654565bc7e894c7
+
+configMapGenerator:
+  - name: meeting-tools-config
+    literals:
+      - backendurl=http://dev-backend-service
+      - rabbitmq=amqp://guest:guest@rabbitmq:5672
+      - model=/app/whisper-models/ggml-base.en.bin
+      - data=/app/data
+      - mongodb=mongodb://mongodb:27017/dev-meeting-tools

@@ -54,7 +54,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: model
+                  key: modelfile
             # Secret variables
             - name: HUGGINGFACE_TOKEN
               valueFrom:
