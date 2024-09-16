@@ -40,7 +40,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: fastapi
+                  key: backendurl
             - name: MODEL_FILE
               valueFrom:
                 configMapKeyRef:

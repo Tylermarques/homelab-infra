@@ -44,12 +44,12 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: celery
+                  key: rabbitmq
             - name: FASTAPI_URL
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: fastapi
+                  key: backendurl
             - name: MODEL_FILE
               valueFrom:
                 configMapKeyRef:
