@@ -30,7 +30,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: mongo
+                  key: mongodb
             # secret variables
             - name: JWT_SECRET
               valueFrom:

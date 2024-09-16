@@ -34,7 +34,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: mongo
+                  key: mongodb
             - name: DATA_DIR
               valueFrom:
                 configMapKeyRef:
