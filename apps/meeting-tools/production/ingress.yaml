@@ -10,11 +10,11 @@ spec:
       match: Host(`meeting_tools.marquescg.com`) | Host(`www.meeting_tools.marquescg.com`) # TODO: find associated host domain for frontend
       priority: 10
       services:
-        - name: frontend-service
+        - name: prod-frontend-service
           port: 3000
     - kind: Rule
       match: Host(`meeting_tools.marquescg.com/api`) # TODO: find associated host domain for frontend
       priority: 10
       services:
-        - name: backend-service
+        - name: prod-backend-service
           port: 8000
