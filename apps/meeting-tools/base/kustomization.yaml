@@ -3,10 +3,9 @@ resources:
   - frontend-deployment.yaml
   - directory-watcher-deployment.yaml
   - diarization-worker-deployment.yaml
-
-secretGenerator:
-  - name: meeting-tools-secrets
-    literals:
-      - hugginface=
-      - jwt=
+# secretGenerator:
+#   - name: meeting-tools-secrets
+#     literals:
+#       - hugginface=
+#       - jwt=
 
