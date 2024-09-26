@@ -7,13 +7,13 @@ spec:
     - web # TODO: switch this to websecure when appropriate
   routes:
     - kind: Rule
-      match: Host(`dev.MEETING_TOOLS_URL.com`) # TODO: find associated host domain for frontend
+      match: Host(`dev.meeting_tools.marquescg.com`) # TODO: find associated host domain for frontend
       priority: 10
       services:
         - name: frontend-service
           port: 3000
     - kind: Rule
-      match: Host(`dev.MEETING_TOOLS_URL.com/api`) # TODO: find associated host domain for backend
+      match: Host(`dev.meeting_tools.marquescg.com/api`) # TODO: find associated host domain for frontend
       priority: 10
       services:
         - name: backend-service
