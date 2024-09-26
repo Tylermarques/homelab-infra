@@ -12,11 +12,10 @@ images:
     newTag: blah
   - name: meeting-tools-directory-watcher
     newName: ghcr.io/marquescg/meeting-tools-directory-watcher
-    newTag: 0941a6dbb88a848076f6fdc34d171428ed479a99
+    newTag: 6cea4e06df2d172a7f1f2083520832008f927c2c
   - name: meeting-tools-worker
     newName: ghcr.io/marquescg/meeting-tools-worker
-    newTag: 0941a6dbb88a848076f6fdc34d171428ed479a99
-
+    newTag: 6cea4e06df2d172a7f1f2083520832008f927c2c
 configMapGenerator:
   - name: meeting-tools-config
     literals:
