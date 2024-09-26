@@ -45,7 +45,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: model
+                  key: modelfile
           volumeMounts:
             - name: data-volume
               mountPath: /app/data
