@@ -46,6 +46,11 @@ spec:
                 configMapKeyRef:
                   name: meeting-tools-config
                   key: modelfile
+            - name: HUGGINGFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: huggingface
           volumeMounts:
             - name: data-volume
               mountPath: /app/data
