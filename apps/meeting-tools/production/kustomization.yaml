@@ -22,6 +22,6 @@ configMapGenerator:
     literals:
       - backendurl=http://prod-backend-service
       - rabbitmq=amqp://guest:guest@rabbitmq:5672
-      - model=/app/whisper-models/ggml-base.en.bin
+      - modelfile=/app/whisper-models/ggml-base.en.bin
       - data=/app/data
       - mongodb=mongodb://mongodb:27017/meeting-tools
