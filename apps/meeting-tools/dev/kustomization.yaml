@@ -6,16 +6,16 @@ namespace: meeting-tools
 images:
   - name: meeting-tools-backend-dev
     newName: ghcr.io/marquescg/meeting-tools-backend-dev
-    newTag: 8e453ab69201778dfcf39480e18d60cbd9365c07
+    newTag: eeffcd9953cbeaf3d81e4b004147a6ebc107adfd
   - name: meeting-tools-frontend-dev
     newName: ghcr.io/marquescg/meeting-tools-frontend-dev
-    newTag: 8e453ab69201778dfcf39480e18d60cbd9365c07
+    newTag: eeffcd9953cbeaf3d81e4b004147a6ebc107adfd
   - name: meeting-tools-directory-watcher
     newName: ghcr.io/marquescg/meeting-tools-directory-watcher
-    newTag: 8e453ab69201778dfcf39480e18d60cbd9365c07
+    newTag: eeffcd9953cbeaf3d81e4b004147a6ebc107adfd
   - name: meeting-tools-worker
     newName: ghcr.io/marquescg/meeting-tools-worker
-    newTag: 8e453ab69201778dfcf39480e18d60cbd9365c07
+    newTag: eeffcd9953cbeaf3d81e4b004147a6ebc107adfd
 configMapGenerator:
   - name: meeting-tools-config
     literals:
