@@ -5,7 +5,7 @@ metadata:
   name: star-marquescg-com
   namespace: default
 spec:
-  secretName: star-marquescg-prod-tls
+  secretName: star-marquescg-tls
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
