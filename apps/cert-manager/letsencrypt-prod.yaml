@@ -18,3 +18,4 @@ spec:
         selector:
           dnsZones:
             - "tylermarques.com"
+            - "marquescg.com"
