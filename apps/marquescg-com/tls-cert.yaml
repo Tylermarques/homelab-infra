@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: marquescg-com
+  namespace: marquescg-com
+spec:
+  secretName: marquescg-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.marquescg.com"
+  dnsNames:
+    - "marquescg.com"
+    - "*.marquescg.com"

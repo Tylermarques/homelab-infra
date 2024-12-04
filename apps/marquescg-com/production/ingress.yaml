@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: marquescg-com
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`marquescg.com`)
+      priority: 10
+      services:
+        - name: prod-marquescg-com
+          port: 3000
+  tls:
+    secretName: marquescg-tls

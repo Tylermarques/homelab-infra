@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marquescg-com
+  namespace: default
+  labels:
+    app: marquescg-com
+spec:
+  selector:
+    matchLabels:
+      app: marquescg-com
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: marquescg-com
+      labels:
+        app: marquescg-com
+    spec:
+      containers:
+        - name: marquescg-com
+          imagePullPolicy: Always
+          image: marquescg-com
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+      imagePullSecrets:
+        - name: gchrio-cred
