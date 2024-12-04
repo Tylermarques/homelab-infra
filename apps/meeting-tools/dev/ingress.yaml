@@ -1,20 +1,23 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: meeting-tools-dev
+  name: meeting-tools
+  namespace: default
 spec:
   entryPoints:
-    - web # TODO: switch this to websecure when appropriate
+    - websecure
   routes:
     - kind: Rule
-      match: Host(`dev.meeting_tools.marquescg.com`) # TODO: find associated host domain for frontend
+      match: "Host(`meeting-tools.marquescg.com`) && PathPrefix(`/dev/api`)"
+      priority: 20
+      services:
+        - name: dev-backend-service
+          port: 8000
+    - kind: Rule
+      match: "Host(`meeting-tools.marquescg.com`) && PathPrefix(`/dev`)"
       priority: 10
       services:
         - name: dev-frontend-service
           port: 3000
-    - kind: Rule
-      match: Host(`dev.meeting_tools.marquescg.com/api`) # TODO: find associated host domain for frontend
-      priority: 10
-      services:
-        - name: dev-backend-service
-          port: 8000
+  tls:
+    secretName: meeting-tools-tls
