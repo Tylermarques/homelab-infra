@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: meeting-tools-diarization-worker
+  name: diarization-worker-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: meeting-tools-diarization-worker
+      app: diarization-worker
   template:
     metadata:
       labels:
-        app: meeting-tools-diarization-worker
+        app: diarization-worker
     spec:
       imagePullSecrets:
         - name: gchrio-cred
       containers:
-        - name: meeting-tools-diarization-worker
-          image: meeting-tools-worker:latest
+        - name: diarization-worker
+          image: meeting-tools-diarization:latest
           imagePullPolicy: IfNotPresent
           command:
             [
@@ -30,11 +30,6 @@ spec:
             ]
           env:
             #Configuration variables
-            - name: MONGODB_URI
-              valueFrom:
-                configMapKeyRef:
-                  name: meeting-tools-config
-                  key: mongodb
             - name: DATA_DIR
               valueFrom:
                 configMapKeyRef:
@@ -49,7 +44,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: meeting-tools-config
-                  key: backendurl
+                  key: backendurlinternal
             - name: MODEL_FILE
               valueFrom:
                 configMapKeyRef:
@@ -61,6 +56,11 @@ spec:
                 secretKeyRef:
                   name: meeting-tools-secrets
                   key: huggingface
+            - name: INTERFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: interface
           volumeMounts:
             - name: data-volume
               mountPath: /app/data
@@ -70,9 +70,9 @@ spec:
         - name: data-volume
           nfs:
             server: 192.168.0.71
-            path: /main/plex/meeting-tools/data
+            path: /main/plex/meeting-tools/prod/data
         - name: model-volume
           nfs:
             server: 192.168.0.71
-            path: /main/plex/meeting-tools/models
+            path: /main/plex/meeting-tools/prod/whisper-models
       restartPolicy: Always

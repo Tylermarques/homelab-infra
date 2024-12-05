@@ -34,5 +34,3 @@ spec:
   selector:
     app: rabbitmq
   type: ClusterIP
-
-

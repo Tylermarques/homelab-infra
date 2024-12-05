@@ -1,0 +1,9 @@
+resources:
+  - ./../base
+  - ./ingress.yaml
+namePrefix: prod-
+namespace: marquescg-com
+images:
+  - name: marquescg-com
+    newName: ghcr.io/marquescg/marquescg-com
+    newTag: f829bd6144242854ea4b328ec0c499ce127b3d4e
