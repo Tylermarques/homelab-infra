@@ -1,0 +1,17 @@
+resources:
+  - ./deployment-db.yaml
+  - ./deployment-redis.yaml
+  - ./deployment-server.yaml
+  - ./deployment-worker.yaml
+  - ./ingress.yaml
+  - ./certificate-request.yaml
+  - ./pvc-db.yaml
+  - ./secret.yaml
+  - ./pvc-docker-data.yaml
+  - ./pvc-server.yaml
+  - ./service-db.yaml
+  - ./service-redis.yaml
+  - ./service-server.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: twentycrm

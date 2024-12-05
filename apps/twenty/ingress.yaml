@@ -1,0 +1,27 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: twentycrm
+  namespace: twentycrm
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`twenty.marquescg.com`)
+      kind: Rule
+      services:
+        - name: server
+          port: 3000
+  tls:
+    certResolver: default # Replace with your configured certResolver (e.g., letsencrypt)
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: add-x-forwarded-for
+  namespace: twentycrm
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-For: "{#HEADER_X_FORWARDED_FOR#}"
