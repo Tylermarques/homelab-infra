@@ -55,11 +55,31 @@ spec:
               value: "7d"
             - name: "LOGIN_TOKEN_EXPIRES_IN"
               value: "1h"
+            - name: "MESSAGING_PROVIDER_GMAIL_ENABLED"
+              value: "true"
+            - name: "CALENDAR_PROVIDER_GOOGLE_ENABLED"
+              value: "true"
+            - name: "AUTH_GOOGLE_ENABLED"
+              value: "true"
+            - name: "AUTH_GOOGLE_CALLBACK_URL"
+              value: "https://twenty.marquescg.com/auth/google/redirect"
+            - name: "AUTH_GOOGLE_APIS_CALLBACK_URL"
+              value: "https://twenty.marquescg.com/auth/google-apis/get-access-token"
             - name: APP_SECRET
               valueFrom:
                 secretKeyRef:
                   name: tokens
                   key: accessToken
+            - name: AUTH_GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: tokens
+                  key: auth_google_client_id
+            - name: AUTH_GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: tokens
+                  key: auth_google_client_secret
           ports:
             - containerPort: 3000
               name: http-tcp
