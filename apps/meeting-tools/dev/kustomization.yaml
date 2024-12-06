@@ -11,10 +11,10 @@ patches:
 images:
   - name: meeting-tools-backend
     newName: ghcr.io/marquescg/meeting-tools-backend
-    newTag: 8ede35a8de03abb697fc7462391c08a51d1d7cad
+    newTag: 1cd62be1b78b9cda81ef3ab293071c1b954c1233
   - name: meeting-tools-frontend
     newName: ghcr.io/marquescg/meeting-tools-frontend-dev
-    newTag: 8ede35a8de03abb697fc7462391c08a51d1d7cad
+    newTag: 1cd62be1b78b9cda81ef3ab293071c1b954c1233
   - name: meeting-tools-diarization
     newName: ghcr.io/marquescg/meeting-tools-diarization
-    newTag: 8ede35a8de03abb697fc7462391c08a51d1d7cad
+    newTag: 1cd62be1b78b9cda81ef3ab293071c1b954c1233
