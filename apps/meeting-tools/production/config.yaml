@@ -10,4 +10,4 @@ data:
   data: /app/data
   mongodb: mongodb://prod-mongodb.meeting-tools.svc.cluster.local:27017/meeting-tools
   backendroot: /api
-  rontendroot: /
+  frontendroot: /
