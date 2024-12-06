@@ -3,6 +3,7 @@ namespace: meeting-tools
 resources:
   - ./../base
   - ./ingress.yaml
+  - ./config.yaml
 patches:
   - path: ./secret-ref.yaml
   - path: ./volumes.yaml
@@ -10,21 +11,10 @@ patches:
 images:
   - name: meeting-tools-backend
     newName: ghcr.io/marquescg/meeting-tools-backend
-    newTag: af19610e776e00b3d497f83052a4e85de88ae02f
+    newTag: 3f58f27d55ba1afbc11760aa3b6d7cfe72342310
   - name: meeting-tools-frontend
     newName: ghcr.io/marquescg/meeting-tools-frontend-dev
-    newTag: af19610e776e00b3d497f83052a4e85de88ae02f
+    newTag: 3f58f27d55ba1afbc11760aa3b6d7cfe72342310
   - name: meeting-tools-diarization
     newName: ghcr.io/marquescg/meeting-tools-diarization
-    newTag: af19610e776e00b3d497f83052a4e85de88ae02f
-configMapGenerator:
-  - name: meeting-tools-config
-    literals:
-      - backendurl=https://meeting-tools.marquescg.com/dev/api
-      - backendurlinternal=http://dev-backend-service.meeting-tools.svc.cluster.local:8000
-      - rabbitmq=amqp://guest:guest@dev-rabbitmq.meeting-tools.svc.cluster.local:5672
-      - modelfile=/app/whisper-models/ggml-base.en.bin
-      - data=/app/data
-      - mongodb=mongodb://dev-mongodb.meeting-tools.svc.cluster.local:27017/dev-meeting-tools
-      - backendroot=/dev/api
-      - frontendroot=/dev
+    newTag: 3f58f27d55ba1afbc11760aa3b6d7cfe72342310
