@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: meeting-tools-config
+data:
+  backendurl: https://meeting-tools.marquescg.com/api
+  backendurlinternal: http://prod-backend-service.meeting-tools.svc.cluster.local:8000
+  rabbitmq: amqp://guest:guest@prod-rabbitmq.meeting-tools.svc.cluster.local:5672
+  modelfile: /app/whisper-models/ggml-base.en.bin
+  data: /app/data
+  mongodb: mongodb://prod-mongodb.meeting-tools.svc.cluster.local:27017/meeting-tools
+  backendroot: /api
+  rontendroot: /

@@ -1,29 +1,16 @@
 namePrefix: prod-
 namespace: meeting-tools
-
 resources:
   - ./../base
   - ./ingress.yaml
-
+  - ./config.yaml
 images:
   - name: meeting-tools-backend
     newName: ghcr.io/marquescg/meeting-tools-backend
-    newTag: aae609e19db7410529d01769e68a0bb6b71bba1f
+    newTag: 1030cb37428b64df7c9c59943338291dae438cb3
   - name: meeting-tools-frontend
     newName: ghcr.io/marquescg/meeting-tools-frontend
-    newTag: aae609e19db7410529d01769e68a0bb6b71bba1f
+    newTag: 1030cb37428b64df7c9c59943338291dae438cb3
   - name: meeting-tools-diarization
     newName: ghcr.io/marquescg/meeting-tools-diarization
-    newTag: aae609e19db7410529d01769e68a0bb6b71bba1f
-
-configMapGenerator:
-  - name: meeting-tools-config
-    literals:
-      - backendurl=https://meeting-tools.marquescg.com/api
-      - backendurlinternal=http://prod-backend-service.meeting-tools.svc.cluster.local:8000
-      - rabbitmq=amqp://guest:guest@prod-rabbitmq.meeting-tools-test.svc.cluster.local:5672
-      - modelfile=/app/whisper-models/ggml-base.en.bin
-      - data=/app/data
-      - mongodb=mongodb://prod-mongodb.meeting-tools-test.svc.cluster.local:27017/dev-meeting-tools
-      - backendroot=/api
-      - frontendroot=/
+    newTag: 1030cb37428b64df7c9c59943338291dae438cb3
