@@ -10,21 +10,21 @@ patches:
 images:
   - name: meeting-tools-backend
     newName: ghcr.io/marquescg/meeting-tools-backend
-    newTag: df5636a38359702af02c215e87020f8de812c819
+    newTag: af19610e776e00b3d497f83052a4e85de88ae02f
   - name: meeting-tools-frontend
     newName: ghcr.io/marquescg/meeting-tools-frontend-dev
-    newTag: df5636a38359702af02c215e87020f8de812c819
+    newTag: af19610e776e00b3d497f83052a4e85de88ae02f
   - name: meeting-tools-diarization
     newName: ghcr.io/marquescg/meeting-tools-diarization
-    newTag: df5636a38359702af02c215e87020f8de812c819
+    newTag: af19610e776e00b3d497f83052a4e85de88ae02f
 configMapGenerator:
   - name: meeting-tools-config
     literals:
       - backendurl=https://meeting-tools.marquescg.com/dev/api
-      - backendurlinternal=http://dev-backend-service.meeting-tools-test.svc.cluster.local:8000
-      - rabbitmq=amqp://guest:guest@dev-rabbitmq.meeting-tools-test.svc.cluster.local:5672
+      - backendurlinternal=http://dev-backend-service.meeting-tools.svc.cluster.local:8000
+      - rabbitmq=amqp://guest:guest@dev-rabbitmq.meeting-tools.svc.cluster.local:5672
       - modelfile=/app/whisper-models/ggml-base.en.bin
       - data=/app/data
-      - mongodb=mongodb://dev-mongodb.meeting-tools-test.svc.cluster.local:27017/dev-meeting-tools
+      - mongodb=mongodb://dev-mongodb.meeting-tools.svc.cluster.local:27017/dev-meeting-tools
       - backendroot=/dev/api
       - frontendroot=/dev
