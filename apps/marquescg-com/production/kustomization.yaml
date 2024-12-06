@@ -6,4 +6,4 @@ namespace: marquescg-com
 images:
   - name: marquescg-com
     newName: ghcr.io/marquescg/marquescg-com
-    newTag: f829bd6144242854ea4b328ec0c499ce127b3d4e
+    newTag: 0395d846058f117c0b2967bcd2c464f190af60cd

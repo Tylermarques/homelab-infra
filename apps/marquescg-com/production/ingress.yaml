@@ -14,3 +14,22 @@ spec:
           port: 3000
   tls:
     secretName: marquescg-tls
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: marquescg-com-http
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`marquescg.com`)
+      priority: 10
+      middlewares:
+        - name: http-redirect
+      services:
+        - name: prod-marquescg-com
+          port: 3000
+  tls:
+    secretName: marquescg-tls
