@@ -39,3 +39,46 @@ metadata:
 spec:
   selector:
     app: frontend-dev
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  selector:
+    app: mongodb-dev
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  selector:
+    matchLabels:
+      app: mongodb-dev
+  template:
+    metadata:
+      labels:
+        app: mongodb-dev
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    app: rabbitmq-dev
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    matchLabels:
+      app: rabbitmq-dev
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-dev
+

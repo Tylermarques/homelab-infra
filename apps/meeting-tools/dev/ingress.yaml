@@ -21,3 +21,29 @@ spec:
           port: 3000
   tls:
     secretName: meeting-tools-tls
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: meeting-tools-http
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: "Host(`meeting-tools.marquescg.com`) && PathPrefix(`/dev/api`)"
+      priority: 20
+      middlewares:
+        - name: https-redirect
+      services:
+        - name: dev-backend-service
+          port: 8000
+    - kind: Rule
+      match: "Host(`meeting-tools.marquescg.com`) && PathPrefix(`/dev`)"
+      priority: 10
+      middlewares:
+        - name: https-redirect
+      services:
+        - name: dev-frontend-service
+          port: 3000
