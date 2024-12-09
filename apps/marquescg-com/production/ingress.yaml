@@ -27,9 +27,18 @@ spec:
       match: Host(`marquescg.com`)
       priority: 10
       middlewares:
-        - name: http-redirect
+        - name: prod-http-redirect
       services:
         - name: prod-marquescg-com
           port: 3000
   tls:
     secretName: marquescg-tls
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
