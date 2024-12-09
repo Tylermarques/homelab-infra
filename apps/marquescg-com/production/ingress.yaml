@@ -27,7 +27,7 @@ spec:
       match: Host(`marquescg.com`)
       priority: 10
       middlewares:
-        - name: prod-http-redirect
+        - name: prod-https-redirect
       services:
         - name: prod-marquescg-com
           port: 3000
