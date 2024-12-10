@@ -27,11 +27,11 @@ spec:
     - kind: Rule
       match: Host(`marquescg.com`)
       priority: 10
+      middlewares:
+        - name: prod-https-redirect
       services:
         - name: prod-marquescg-com
           port: 3000
-  tls:
-    secretName: marquescg-tls
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
