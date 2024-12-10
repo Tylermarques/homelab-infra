@@ -35,7 +35,7 @@ spec:
       match: Host(`meeting-tools.marquescg.com`) && PathPrefix(`/api`) && !PathPrefix(`/dev/api`)
       priority: 20
       middlewares:
-        - name: https-redirect
+        - name: prod-https-redirect
       services:
         - name: prod-backend-service
           port: 8000
@@ -43,7 +43,16 @@ spec:
       match: Host(`meeting-tools.marquescg.com`) && !PathPrefix(`/dev`)
       priority: 10
       middlewares:
-        - name: https-redirect
+        - name: prod-https-redirect
       services:
         - name: prod-frontend-service
           port: 3000
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true

@@ -7,10 +7,10 @@ resources:
 images:
   - name: meeting-tools-backend
     newName: ghcr.io/marquescg/meeting-tools-backend
-    newTag: 719aff6d25af169e67ff29e8324a50815fcd27ab
+    newTag: 393507e6241315cf05aad16f6f8eed2ae16cf8c8
   - name: meeting-tools-frontend
     newName: ghcr.io/marquescg/meeting-tools-frontend
-    newTag: 719aff6d25af169e67ff29e8324a50815fcd27ab
+    newTag: 393507e6241315cf05aad16f6f8eed2ae16cf8c8
   - name: meeting-tools-diarization
     newName: ghcr.io/marquescg/meeting-tools-diarization
-    newTag: 719aff6d25af169e67ff29e8324a50815fcd27ab
+    newTag: 393507e6241315cf05aad16f6f8eed2ae16cf8c8
