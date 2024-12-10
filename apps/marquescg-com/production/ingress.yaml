@@ -11,6 +11,7 @@ spec:
       priority: 10
       services:
         - name: prod-marquescg-com
+          scheme: https
           port: 3000
   tls:
     secretName: marquescg-tls
@@ -26,8 +27,6 @@ spec:
     - kind: Rule
       match: Host(`marquescg.com`)
       priority: 10
-      middlewares:
-        - name: prod-https-redirect
       services:
         - name: prod-marquescg-com
           port: 3000
