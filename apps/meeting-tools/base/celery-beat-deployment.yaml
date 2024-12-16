@@ -1,35 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: diarization-worker-deployment
+  name: celery-beat-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: diarization-worker
+      app: celery-beat
   template:
     metadata:
       labels:
-        app: diarization-worker
+        app: celery-beat
     spec:
       imagePullSecrets:
         - name: gchrio-cred
       containers:
-        - name: diarization-worker
+        - name: celery-beat
           image: meeting-tools-diarization:latest
           imagePullPolicy: IfNotPresent
-          command:
-            [
-              "celery",
-              "-A",
-              "tasks",
-              "worker",
-              "--loglevel=info",
-              "--concurrency",
-              "1",
-              "-Q",
-              "process_file"
-            ]
+          command: ["celery", "-A", "tasks", "beat", "--loglevel=info"]
           env:
             #Configuration variables
             - name: DATA_DIR
@@ -66,15 +55,9 @@ spec:
           volumeMounts:
             - name: data-volume
               mountPath: /app/data
-            - name: model-volume
-              mountPath: /app/whisper-models
       volumes:
         - name: data-volume
           nfs:
             server: 192.168.0.71
             path: /main/plex/meeting-tools/prod/data
-        - name: model-volume
-          nfs:
-            server: 192.168.0.71
-            path: /main/plex/meeting-tools/prod/whisper-models
       restartPolicy: Always

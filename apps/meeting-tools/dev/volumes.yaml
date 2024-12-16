@@ -13,7 +13,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: directory-watcher-deployment
+  name: celery-beat-deployment
   namespace: default
 spec:
   template:
@@ -27,6 +27,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: diarization-worker-deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: data-volume
+          nfs:
+            path: /main/plex/meeting-tools/dev/data
+        - name: model-volume
+          nfs:
+            path: /main/plex/meeting-tools/dev/whisper-models
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: directory-watcher-deployment
 spec:
   template:
     spec:

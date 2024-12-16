@@ -1,0 +1,14 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: keda-autoscaler
+spec:
+  scaleTargetRef:
+    name: diarization-worker-deployment
+  triggers:
+    - type: rabbitmq
+      metadata:
+        host: amqp://guest:guest@prod-rabbitmq.meeting-tools.svc.cluster.local:5672
+        mode: QueueLength
+        value: "1"
+        queueName: "process_file"
