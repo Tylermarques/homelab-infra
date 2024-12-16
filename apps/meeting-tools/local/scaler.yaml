@@ -2,5 +2,5 @@
   path: /spec/triggers/0/metadata/host
   value: amqp://guest:guest@rabbitmq.meeting-tools.svc.cluster.local:5672
 - op: replace
-  path: /spec/scaleTargetRef
+  path: /spec/scaleTargetRef/name
   value: diarization-worker-deployment
