@@ -4,7 +4,7 @@ metadata:
   name: keda-autoscaler
 spec:
   scaleTargetRef:
-    name: diarization-worker-deployment
+    name: prod-diarization-worker-deployment
   triggers:
     - type: rabbitmq
       metadata:
