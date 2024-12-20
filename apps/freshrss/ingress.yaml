@@ -5,11 +5,11 @@ metadata:
   namespace: default
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
     - kind: Rule
       match: Host(`freshrss.tylermarques.com`)
       priority: 10
       services:
-        - name: freshrss-freshrss
+        - name: freshrss
           port: 80
