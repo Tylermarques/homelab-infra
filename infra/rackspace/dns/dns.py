@@ -1,5 +1,3 @@
-"""A Kubernetes Python Pulumi program"""
-
 from dotenv import dotenv_values
 import pulumi
 import pulumi_cloudflare as cloudflare
@@ -52,6 +50,7 @@ for domain in TM_PROXIED_DOMAINS:
         content=env_config["HOME_IP"],
         type="A",
         proxied=True,
+        allow_overwrite=True,
     )
 for domain in TM_NOT_PROXIED_DOMAINS:
     _ = cloudflare.Record(
@@ -62,6 +61,7 @@ for domain in TM_NOT_PROXIED_DOMAINS:
         type="A",
         # Turn off proxying for these domains
         proxied=False,
+        allow_overwrite=True,
     )
 _ = cloudflare.Record(
     "TM_www",
@@ -70,4 +70,5 @@ _ = cloudflare.Record(
     content="tylermarques.com",
     type="CNAME",
     proxied=True,
+    allow_overwrite=True,
 )

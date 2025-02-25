@@ -1,4 +1,4 @@
-name: dns
+name: rackspace
 description: A minimal Kubernetes Python Pulumi program
 runtime:
   name: python
