@@ -6,4 +6,4 @@ namespace: tylermarques-com
 images:
   - name: tylermarques-com
     newName: ghcr.io/tylermarques/tylermarques-com
-    newTag: df79fdd9041446961354a0e170811cb830edf971
+    newTag: 6b90eec228bc38a8b8b5613530fe53a3e93a58cb
