@@ -1,0 +1,2 @@
+config:
+  kubernetes:context: marques_consulting_group-main-oidc

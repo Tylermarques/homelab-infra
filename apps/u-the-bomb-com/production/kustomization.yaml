@@ -2,7 +2,6 @@ resources:
   - ./../base
   - ./ingress.yaml
 namePrefix: prod-
-namespace: u-the-bomb-com-prod
 images:
   - name: u-the-bomb-com
     newName: ghcr.io/tylermarques/u-the-bomb-com

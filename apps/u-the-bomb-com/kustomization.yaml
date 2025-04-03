@@ -1,3 +1,4 @@
 resources:
   - ./dev
   - ./production
+namespace: u-the-bomb-com
