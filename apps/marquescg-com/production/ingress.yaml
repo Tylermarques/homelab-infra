@@ -1,4 +1,4 @@
-apiVersion: traefik.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: marquescg-com
@@ -15,7 +15,7 @@ spec:
   tls:
     secretName: marquescg-tls
 ---
-apiVersion: traefik.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: marquescg-com-http
@@ -32,7 +32,7 @@ spec:
         - name: prod-marquescg-com
           port: 3000
 ---
-apiVersion: traefik.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: https-redirect
