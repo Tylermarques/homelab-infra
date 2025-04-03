@@ -7,3 +7,6 @@
 **/enterprise-numbers.txt
 
 **/.env
+*.pyc
+venv/
+*.zip

@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    notified.notifications.argoproj.io: '{"7fc803d2a37efc657ed1beb7ea2841b3a43850be:on-deployed:[0].Yv81TUs0gmPTEyk-v8Lb6ZKEo0g:ntfy:":1734045580,"on-sync-succeeded:[0].IwKhHw9Hu8IE3z5Y8CQE4vReLYs:ntfy-service:":1734059324,"on-sync-succeeded:[0].IwKhHw9Hu8IE3z5Y8CQE4vReLYs:ntfy:":1734045580,"u-the-bomb-com:on-created:[0].X_5TO4MPCKAyY0ipFgr6_IraRNs:ntfy:":1734045580}'
+  name: u-the-bomb-com
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: apps/u-the-bomb-com/
+    repoURL: https://github.com/Tylermarques/homelab-infra
+    targetRevision: HEAD
+  syncPolicy:
+    automated: {}
+    retry:
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m0s
+      limit: 2
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true

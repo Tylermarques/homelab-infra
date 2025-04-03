@@ -1,1 +1,0 @@
-from dns.dns import *
