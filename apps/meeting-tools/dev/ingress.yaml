@@ -1,4 +1,4 @@
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: meeting-tools
@@ -22,7 +22,7 @@ spec:
   tls:
     secretName: meeting-tools-tls
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: meeting-tools-http
@@ -48,7 +48,7 @@ spec:
         - name: dev-frontend-service
           port: 3000
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.us/v1alpha1
 kind: Middleware
 metadata:
   name: https-redirect

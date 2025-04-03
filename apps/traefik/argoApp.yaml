@@ -10,6 +10,31 @@ spec:
     repoURL: https://traefik.github.io/charts
     targetRevision: v34.5.0
     helm:
+      values: |
+        # Add openTelemetry metrics
+        otlp:
+          enabled: true
+
+        ingressRoute:
+          dashboard:
+            enabled: true
+
+        # All http requests will be redirected to https
+        ports:
+          web:
+            redirections:
+              entryPoint:
+                to: websecure
+                scheme: https
+                permanent: true
+
+        # Install and use the crowdsec plugin, it uses a community sourced blacklist to
+        # monitor and bounce malicious traffic
+        experimental:
+          plugins:
+            demo:
+              moduleName: github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+              version: v1.3.5
       releaseName: traefik
   destination:
     server: "https://kubernetes.default.svc"
