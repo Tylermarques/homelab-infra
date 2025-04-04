@@ -12,4 +12,5 @@ for ns in ["marquescg-com", "tylermarques-com", "argocd", "u-the-bomb-com"]:
         data={
             ".dockerconfigjson": env_config["GCHRIO_CRED"],
         },
+        type="kubernetes.io/dockerconfigjson",
     )

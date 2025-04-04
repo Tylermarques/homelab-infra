@@ -414,6 +414,25 @@ semver = ">=2.8.1"
 typing-extensions = {version = ">=4.11", markers = "python_version < \"3.11\""}
 
 [[package]]
+name = "pulumi-kubernetes-cert-manager"
+version = "0.2.0"
+description = "Strongly-typed Cert Manager installation"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "pulumi_kubernetes_cert_manager-0.2.0-py3-none-any.whl", hash = "sha256:66180adbc1eb5d92a0832ea265dea3d9559b7818ed0d396b610087716bbbbbec"},
+    {file = "pulumi_kubernetes_cert_manager-0.2.0.tar.gz", hash = "sha256:c856900632be71bbd9fe1a8391b569fde7860470c0cbd73d030377319e9c2444"},
+]
+
+[package.dependencies]
+parver = ">=0.2.1"
+pulumi = ">=3.142.0,<4.0.0"
+pulumi-kubernetes = ">=4.0.0,<5.0.0"
+semver = ">=2.8.1"
+typing-extensions = {version = ">=4.11", markers = "python_version < \"3.11\""}
+
+[[package]]
 name = "python-dotenv"
 version = "1.0.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -571,4 +590,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "fd4fac8430df82f8551bfa711010749041912aa297387a284b472a80e55390f8"
+content-hash = "73e7dcf465356144ad2bdec1d68f743aea0a581bf6e104f9dbc869f8dc2cd484"

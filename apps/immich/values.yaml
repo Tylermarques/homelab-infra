@@ -1,0 +1,14 @@
+env:
+  DB_HOSTNAME: "immich-cluster-rw"
+  DB_USERNAME: "immich"
+  DB_PASSWORD: "zybvvoI4?b0lbpqJ4thk?Eq4Ei!JCrZHrmLbCf8f"
+
+immich:
+  persistence:
+    library:
+      existingClaim: immich-cluster-1
+
+redis:
+  enabled: true
+  auth:
+    enabled: false

@@ -1,0 +1,44 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-cluster
+  namespace: immich
+spec:
+  instances: 1
+  imageName: ghcr.io/tensorchord/cloudnative-pgvecto.rs:15.8-v0.3.0
+  storage:
+    size: 10Gi
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: nfs-client
+      volumeMode: Filesystem
+  managed:
+    roles:
+      - name: immich
+        createdb: true
+        login: true
+        superuser: true
+        passwordSecret:
+          name: immich-postgres-userpass
+  postgresql:
+    shared_preload_libraries:
+      - "vectors.so"
+  bootstrap:
+    initdb:
+      postInitSQL:
+        - ALTER SYSTEM SET search_path TO "$user", public, vectors;
+        - CREATE EXTENSION IF NOT EXISTS "vectors";
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: immich-database
+spec:
+  name: immich
+  owner: immich
+  cluster:
+    name: immich-cluster
