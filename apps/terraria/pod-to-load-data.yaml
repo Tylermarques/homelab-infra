@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: terraria-data-loader
+  namespace: terraria
+  labels:
+    app: terraria-data-loader
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      command:
+        [
+          "sh",
+          "-c",
+          'echo "Terraria data loader pod is running..." && sleep 3600',
+        ]
+      volumeMounts:
+        - name: terraria-data
+          mountPath: /data
+  volumes:
+    - name: terraria-data
+      persistentVolumeClaim:
+        claimName: terraria-data-pvc
+  restartPolicy: Never

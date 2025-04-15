@@ -9,22 +9,22 @@ from pulumi_kubernetes_cert_manager import CertManager, ReleaseArgs
 env_config = dotenv_values(".env")
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# TODO: I think technically the helm chart should be dependant on the NS
-cert_manager_ns = Namespace("cert-manager-namespace", metadata={"name": "cert-manager"})
 
+cert_manager_ns = Namespace("cert-manager-namespace", metadata={"name": "cert-manager"})
 
 cert_manager = CertManager(
     "certmanager",
     install_crds=True,
     helm_options=ReleaseArgs(
         chart="cert-manager",
-        version="v1.17.0",
+        version="v1.17.1",
         namespace="cert-manager",
         value_yaml_files=[pulumi.FileAsset(current_dir + "/values.yaml")],
         repository_opts=RepositoryOptsArgs(
             repo="https://charts.jetstack.io",
         ),
     ),
+    opts=pulumi.ResourceOptions(depends_on=cert_manager_ns),
 )
 
 if env_config["CLOUDFARE_TOKEN"] is None:
@@ -33,7 +33,10 @@ if env_config["CLOUDFARE_TOKEN"] is None:
 cloudflare_token = Secret(
     "cloudflare-token",
     string_data={"cloudflare-token": env_config["CLOUDFARE_TOKEN"]},
-    metadata={"name": "cloudflare-token"},
+    metadata={
+        "name": "cloudflare-token-secret",
+        "namespace": cert_manager_ns.metadata["name"],
+    },
 )
 
 issuer = CustomResource(
@@ -56,7 +59,13 @@ issuer = CustomResource(
                             },
                         }
                     },
-                    "selector": {"dnsZones": ["tylermarques.com", "marquescg.com"]},
+                    "selector": {
+                        "dnsZones": [
+                            "tylermarques.com",
+                            "marquescg.com",
+                            "u-the-bomb.com",
+                        ]
+                    },
                 }
             ],
         }
