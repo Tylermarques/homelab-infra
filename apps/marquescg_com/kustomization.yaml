@@ -1,6 +1,4 @@
 resources:
   - ./production
   - ./namespace.yaml
-  - ./tls-cert.yaml
 namespace: marquescg-com
-

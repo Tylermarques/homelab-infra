@@ -1,0 +1,78 @@
+# This shows off how to attach the NFS through tailscale to a given pod
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-test-pod
+  namespace: default
+  annotations:
+    tailscale.com/inject: "true"
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      command:
+        - /bin/sh
+        - -c
+        - |
+          echo 'Mounting NFS...';
+          mkdir -p /mnt/nfs;
+          mount -t nfs -o vers=4 ${NFS_SERVER}:${NFS_PATH} /mnt/nfs;
+          echo 'Mount result: $?';
+          ls -la /mnt/nfs;
+          echo 'Test complete';
+          sleep 3600
+      env:
+        - name: NFS_SERVER
+          value: proxmox-egress
+        - name: NFS_PATH
+          value: /main/plex/
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - name: nfs-test-volume
+          mountPath: /mnt/nfs-volume
+  volumes:
+    - name: nfs-test-volume
+      persistentVolumeClaim:
+        claimName: pvc-nfs-static
+  restartPolicy: Never
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/provisioned-by: nfs.csi.k8s.io
+  name: pv-nfs
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-csi
+  mountOptions:
+    - nfsvers=4.1
+  csi:
+    driver: nfs.csi.k8s.io
+    # volumeHandle format: {nfs-server-address}#{sub-dir-name}#{share-name}
+    # make sure this value is unique for every share in the cluster
+    volumeHandle: proxmox#/main/plex/##
+    volumeAttributes:
+      server: proxmox-egress
+      share: /main/plex
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-nfs-static
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: pv-nfs
+  storageClassName: nfs-csi
