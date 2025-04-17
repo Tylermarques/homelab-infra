@@ -33,6 +33,7 @@ def create_traefik_ingress(
     tls_enabled: bool = True,
     middleware: Optional[List[str]] = None,
     cert_issuer: str = "letsencrypt-prod-cloudissuer",
+    create_root: bool = False,
 ) -> k8s.apiextensions.CustomResource:
     """
     Create a Traefik IngressRoute CustomResource for a given service. Name, Namespace, and Service_Name are all derived from the subdomain,
@@ -49,6 +50,7 @@ def create_traefik_ingress(
         tls_enabled: Whether to enable TLS (default: True)
         middleware: List of Traefik middleware to apply
         cert_issuer: The cert-manager ClusterIssuer to use (default: "letsencrypt-prod")
+        create_root: Whether this record if for the route of the domain
 
     Returns:
         The created Traefik IngressRoute CustomResource
@@ -62,6 +64,8 @@ def create_traefik_ingress(
 
     # Construct the full hostname
     hostname = f"{subdomain}.{host_domain.value}"
+    if create_root:
+        hostname = host_domain.value
 
     # Create the middleware references if specified
     middleware_refs = []
@@ -74,12 +78,19 @@ def create_traefik_ingress(
             else:
                 middleware_refs.append({"name": mw, "namespace": namespace})
 
-    # Create the route spec
     route = {
         "match": f"Host(`{hostname}`) && PathPrefix(`{path}`)",
         "kind": "Rule",
         "services": [{"name": service_name, "port": service_port}],
     }
+    if create_root:
+        if name != host_domain.value:
+            raise ValueError(
+                "You provided a name that was not the host_domain, but also create_root. The name cannot be used"
+            )
+        route["match"] = f"Host(`{host_domain.value}`)"
+
+    # Create the route spec
 
     # Add middlewares if specified
     if middleware_refs:
@@ -151,12 +162,6 @@ def create_cloudflare_A_record(
     )
 
 
-MCG_DOMAINS = {
-    "marquescg.com": {
-        "proxied": True,
-        "content": home_ip,
-    },
-}
 TM_DOMAINS = {
     "hass": {"proxied": False, "content": home_ip},
     "plex": {"proxied": False, "content": home_ip},
@@ -176,7 +181,6 @@ BOMB_DOMAINS = {
 # Note that there are MX records present in CF that are not here. Mostly because they should never need changing.
 # the content for all these domains is the same, so do it in a loop
 for prefix, domain_block, zone in [
-    ("MCG", MCG_DOMAINS, mcg_zone),
     ("TM", TM_DOMAINS, tylermarques_zone),
     ("BOMB", BOMB_DOMAINS, uthebomb_zone),
 ]:

@@ -4,6 +4,7 @@ import pulumi_kubernetes as k8s
 
 from ..dns import create_cloudflare_A_record, create_traefik_ingress, ALLOWED_DOMAINS
 
+dns_record = create_cloudflare_A_record("marquescg.com", ALLOWED_DOMAINS.MCG)
 k8s_provider = k8s.Provider("prod")
 
 namespace = "marquescg-com"
@@ -15,11 +16,12 @@ service = k8s.core.v1.Service.get(
 )
 
 ingress = create_traefik_ingress(
-    "marquescg-com",
+    "marquescg.com",
     ALLOWED_DOMAINS.MCG,
     service.spec.ports[0].port,
     service_name="prod-marquescg-com",
     namespace=namespace,
+    create_root=True,
 )
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
