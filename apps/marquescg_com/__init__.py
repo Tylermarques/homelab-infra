@@ -3,9 +3,9 @@ import pulumi
 import pulumi_kubernetes as k8s
 
 from ..dns import create_cloudflare_A_record, create_traefik_ingress, ALLOWED_DOMAINS
+from ..utils import k8s_provider
 
 dns_record = create_cloudflare_A_record("marquescg.com", ALLOWED_DOMAINS.MCG)
-k8s_provider = k8s.Provider("prod")
 
 namespace = "marquescg-com"
 

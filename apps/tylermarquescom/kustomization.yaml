@@ -1,5 +1,4 @@
 resources:
   - ./dev
   - ./production
-  - ./namespace.yaml
 namespace: tylermarques-com

@@ -1,6 +1,5 @@
 resources:
   - ./../base
-  - ./ingress.yaml
 namePrefix: prod-
 images:
   - name: tylermarques-com
