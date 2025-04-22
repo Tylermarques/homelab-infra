@@ -34,7 +34,7 @@ chart = k8s.helm.v3.Chart(
                         {
                             "name": "Prometheus",
                             "type": "prometheus",
-                            "url": "http://prometheus-prometheus-server",
+                            "url": "http://prometheus-server",
                             "access": "proxy",
                             "isDefault": True,
                         }

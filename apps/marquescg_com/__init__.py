@@ -2,24 +2,29 @@ import os
 import pulumi
 import pulumi_kubernetes as k8s
 
+from pulumi_kubernetes.core.v1 import ServicePortArgs, ServiceSpecArgs, Namespace
+from pulumi_kubernetes.meta.v1 import ObjectMetaArgs, LabelSelectorArgs
 from ..dns import create_cloudflare_A_record, create_traefik_ingress, ALLOWED_DOMAINS
-from ..utils import k8s_provider
 
 dns_record = create_cloudflare_A_record("marquescg.com", ALLOWED_DOMAINS.MCG)
 
-namespace = "marquescg-com"
 
-service = k8s.core.v1.Service.get(
-    "marquescg-com",  # logical name inside Pulumi
-    id="marquescg-com/prod-marquescg-com",  # <namespace>/<serviceName>
-    opts=pulumi.ResourceOptions(provider=k8s_provider),
+namespace = Namespace("marquescgcom", metadata=ObjectMetaArgs(name="marquescgcom"))
+service = k8s.core.v1.Service(
+    "marquescgcom-Service",
+    metadata=ObjectMetaArgs(name="marquescgcom", namespace=namespace.metadata.name),
+    spec=ServiceSpecArgs(
+        selector={"app": "marquescgcom"},
+        ports=[ServicePortArgs(port=3000, target_port=3000, name="marquescgcom")],
+        type="ClusterIP",
+    ),
 )
 
 ingress = create_traefik_ingress(
     "marquescg.com",
     ALLOWED_DOMAINS.MCG,
     service.spec.ports[0].port,
-    service_name="prod-marquescg-com",
+    service_name=service.metadata.name,
     namespace=namespace,
     create_root=True,
 )

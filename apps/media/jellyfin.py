@@ -1,6 +1,6 @@
 import pulumi
 import pulumi_kubernetes as k8s
-from .volumes import create_nfs_pv_and_pvc
+from ..volumes import create_nfs_pv_and_pvc
 from .namespace import media_namespace
 from ..dns import create_cloudflare_A_record, ALLOWED_DOMAINS, create_traefik_ingress
 
@@ -31,11 +31,6 @@ def create_jellyfin_deployment(
     tag="latest",
     port=8096,
     service_type="ClusterIP",
-    ingress_enabled=True,
-    ingress_class_name="",
-    ingress_annotations={},
-    ingress_tls_enabled=False,
-    ingress_tls_secret_name="",
     resources={},
     use_tailscale=True,
 ):
