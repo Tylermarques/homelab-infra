@@ -8,4 +8,12 @@
 - Prometheus
 - Dashboard with appropriate auto discovery
 - Move the existing services over to pulumi
--
+  -Implement
+
+### Service migration List
+
+- [] dashy
+- [] freshrss
+- [] prometheus
+- [] immich
+- [] loki
