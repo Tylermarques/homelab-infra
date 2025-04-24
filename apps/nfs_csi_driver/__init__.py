@@ -7,9 +7,7 @@ nfs_csi_driver = Chart(
     ChartOpts(
         chart="csi-driver-nfs",
         version="4.11.0",  # Using the version mentioned in the documentation
-        fetch_opts=k8s.helm.v3.FetchOpts(
-            repo="https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts"
-        ),
+        fetch_opts=k8s.helm.v3.FetchOpts(repo="https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts"),
         namespace="kube-system",
         values={
             # Default configuration based on the documentation

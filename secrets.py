@@ -1,5 +1,4 @@
 from dotenv import dotenv_values
-import pulumi
 import pulumi_kubernetes as kubernetes
 
 env_config = dotenv_values(".env")

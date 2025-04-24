@@ -78,9 +78,7 @@ nfs_pvc = PersistentVolumeClaim(
 # Create Terraria deployment
 terraria_deployment = Deployment(
     "terraria",
-    metadata=ObjectMetaArgs(
-        name="terraria", namespace=terraria_namespace.metadata.name
-    ),
+    metadata=ObjectMetaArgs(name="terraria", namespace=terraria_namespace.metadata.name),
     spec=DeploymentSpecArgs(
         selector={"matchLabels": {"app": "terraria"}},
         replicas=1,
@@ -113,9 +111,7 @@ terraria_deployment = Deployment(
                         name="terraria",
                         image="hexlo/terraria-tmodloader-server:latest",
                         # command=["sh", "-c", "while sleep 3600; do :; done"],
-                        command=[
-                            "/hom/tml/manage-tModLoaderServer.sh start --folder=/home/tml/.local/share/Terraria/tModLoader"
-                        ],
+                        command=["/hom/tml/manage-tModLoaderServer.sh start --folder=/home/tml/.local/share/Terraria/tModLoader"],
                         # command=[
                         #     "/home/tml/.local/share/Terraria/tModLoader/Scripts/entrypoint.sh"
                         # ],
@@ -153,9 +149,7 @@ terraria_deployment = Deployment(
                 volumes=[
                     VolumeArgs(
                         name="nfs-mount",
-                        persistent_volume_claim=PersistentVolumeClaimVolumeSourceArgs(
-                            claim_name=nfs_pvc.metadata.name
-                        ),
+                        persistent_volume_claim=PersistentVolumeClaimVolumeSourceArgs(claim_name=nfs_pvc.metadata.name),
                     )
                 ],
             ),
@@ -165,9 +159,7 @@ terraria_deployment = Deployment(
 # # Create Terraria service
 terraria_service = Service(
     "terraria",
-    metadata=ObjectMetaArgs(
-        name="terraria", namespace=terraria_namespace.metadata.name
-    ),
+    metadata=ObjectMetaArgs(name="terraria", namespace=terraria_namespace.metadata.name),
     spec={
         "selector": {"app": "terraria"},
         "ports": [ServicePortArgs(port=7777, target_port=7777, name="terraria")],
@@ -180,9 +172,7 @@ terraria_ingress = CustomResource(
     "terraria_ingress_route",
     api_version="traefik.io/v1alpha1",
     kind="IngressRoute",
-    metadata=ObjectMetaArgs(
-        name="terraria", namespace=terraria_namespace.metadata.name
-    ),
+    metadata=ObjectMetaArgs(name="terraria", namespace=terraria_namespace.metadata.name),
     spec={
         "entryPoints": ["web"],
         "routes": [

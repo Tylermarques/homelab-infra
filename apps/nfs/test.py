@@ -36,19 +36,13 @@ nfs_test_pod = k8s.core.v1.Pod(
                 security_context=k8s.core.v1.SecurityContextArgs(
                     privileged=True  # Required for mount operations
                 ),
-                volume_mounts=[
-                    k8s.core.v1.VolumeMountArgs(
-                        name="nfs-test-volume", mount_path="/mnt/nfs"
-                    )
-                ],
+                volume_mounts=[k8s.core.v1.VolumeMountArgs(name="nfs-test-volume", mount_path="/mnt/nfs")],
             )
         ],
         volumes=[
             k8s.core.v1.VolumeArgs(
                 name="nfs-csi-volume",
-                persistent_volume_claim=k8s.core.v1.PersistentVolumeClaimVolumeSourceArgs(
-                    claim_name="terraria-pvc"
-                ),
+                persistent_volume_claim=k8s.core.v1.PersistentVolumeClaimVolumeSourceArgs(claim_name="terraria-pvc"),
             )
         ],
         restart_policy="Never",
@@ -60,9 +54,7 @@ pulumi.export("pod_name", nfs_test_pod.metadata.name)
 pulumi.export("namespace", namespace.metadata.name)
 pulumi.export(
     "check_logs_command",
-    pulumi.Output.concat(
-        "kubectl logs -n ", namespace.metadata.name, " ", nfs_test_pod.metadata.name
-    ),
+    pulumi.Output.concat("kubectl logs -n ", namespace.metadata.name, " ", nfs_test_pod.metadata.name),
 )
 pulumi.export(
     "exec_into_pod_command",

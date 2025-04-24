@@ -1,9 +1,10 @@
 from dotenv import dotenv_values
-import pulumi
 import pulumi_kubernetes as k8s
 import pulumi_cloudflare as cloudflare
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Optional
+
+from pulumi_kubernetes.apiextensions import CustomResource
 
 
 class ALLOWED_DOMAINS(Enum):
@@ -21,6 +22,22 @@ uthebomb_zone = cloudflare.get_zone(name="u-the-bomb.com")
 rackspace_ip = env_config["RACKSPACE_IP"]
 home_ip = env_config["HOME_IP"]
 
+# Middleware that limits traffic to only coming from the tailnet.
+tailnet_allow_middleware = CustomResource(
+    "tailnet-allow",
+    api_version="traefik.io/v1alpha1",
+    kind="Middleware",
+    metadata={
+        "name": "tailnet-allow",
+        "namespace": "monitoring",
+    },
+    spec={
+        "ipAllowList": {
+            "sourceRange": ["100.64.0.0/10"],
+        }
+    },
+)
+
 
 def create_traefik_ingress(
     subdomain: str,
@@ -31,9 +48,9 @@ def create_traefik_ingress(
     service_name: Optional[str] = None,
     path: Optional[str] = "/",
     tls_enabled: bool = True,
-    middleware: Optional[List[str]] = None,
     cert_issuer: str = "letsencrypt-prod-cloudissuer",
     create_root: bool = False,
+    tailnet_only: bool = False,
 ) -> k8s.apiextensions.CustomResource:
     """
     Create a Traefik IngressRoute CustomResource for a given service. Name, Namespace, and Service_Name are all derived from the subdomain,
@@ -48,9 +65,9 @@ def create_traefik_ingress(
         service_name: Name of the service to route traffic to
         path: URL path to match (default: "/")
         tls_enabled: Whether to enable TLS (default: True)
-        middleware: List of Traefik middleware to apply
         cert_issuer: The cert-manager ClusterIssuer to use (default: "letsencrypt-prod")
         create_root: Whether this record if for the route of the domain
+        tailnet_only: Whether to apply the tailnet only middleware, which only allows traffic from within the tailnet to access the ingress
 
     Returns:
         The created Traefik IngressRoute CustomResource
@@ -67,34 +84,15 @@ def create_traefik_ingress(
     if create_root:
         hostname = host_domain.value
 
-    # Create the middleware references if specified
-    middleware_refs = []
-    if middleware:
-        for mw in middleware:
-            # Check if namespace is specified in the middleware name
-            if "@" in mw:
-                mw_name, mw_namespace = mw.split("@")
-                middleware_refs.append({"name": mw_name, "namespace": mw_namespace})
-            else:
-                middleware_refs.append({"name": mw, "namespace": namespace})
-
-    route = {
-        "match": f"Host(`{hostname}`) && PathPrefix(`{path}`)",
-        "kind": "Rule",
-        "services": [{"name": service_name, "port": service_port}],
-    }
+    route = {"match": f"Host(`{hostname}`) && PathPrefix(`{path}`)", "kind": "Rule", "services": [{"name": service_name, "port": service_port}], "middlewares": []}
     if create_root:
         if name != host_domain.value:
-            raise ValueError(
-                "You provided a name that was not the host_domain, but also create_root. The name cannot be used"
-            )
+            raise ValueError("You provided a name that was not the host_domain, but also create_root. The name cannot be used")
         route["match"] = f"Host(`{host_domain.value}`)"
 
     # Create the route spec
-
-    # Add middlewares if specified
-    if middleware_refs:
-        route["middlewares"] = middleware_refs
+    if tailnet_only:
+        route["middlewares"].append({"name": "tailnet-allow", "namespace": namespace})
 
     # Create the IngressRoute spec
     ingress_route_spec = {"entryPoints": ["websecure"], "routes": [route]}
@@ -139,16 +137,12 @@ def create_traefik_ingress(
 
 # TODO: This file is in a halfway state. New deployments are having their records placed within their directory,
 # old ones are at the bottom of this page.
-def create_cloudflare_A_record(
-    subdomain: str, domain: ALLOWED_DOMAINS, ip=rackspace_ip, proxied=True
-):
+def create_cloudflare_A_record(subdomain: str, domain: ALLOWED_DOMAINS, ip=rackspace_ip, proxied=True):
     """
     Create a DNS record for a subdomain under a specified domain.
     """
     if domain.value not in [d.value for d in ALLOWED_DOMAINS]:
-        raise ValueError(
-            f"Domain {domain.value} is not in allowed domains: {[d.value for d in ALLOWED_DOMAINS]}"
-        )
+        raise ValueError(f"Domain {domain.value} is not in allowed domains: {[d.value for d in ALLOWED_DOMAINS]}")
     zone = cloudflare.get_zone(name=domain.value)
 
     _ = cloudflare.Record(

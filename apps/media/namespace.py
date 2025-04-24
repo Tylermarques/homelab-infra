@@ -1,4 +1,3 @@
-import pulumi
 import pulumi_kubernetes as k8s
 
 # Create a new Pulumi namespace called "media"

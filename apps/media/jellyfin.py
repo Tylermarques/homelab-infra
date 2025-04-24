@@ -41,7 +41,7 @@ def create_jellyfin_deployment(
     app_labels = {"app": "jellyfin"}
 
     # Create NFS PV and PVC
-    nfs_storage = create_nfs_pv_and_pvc(
+    pv, pvc = create_nfs_pv_and_pvc(
         name="jellyfin",
         namespace=namespace,
         server=nfs_config["server"],
@@ -97,24 +97,16 @@ def create_jellyfin_deployment(
                         k8s.core.v1.ContainerArgs(
                             name="jellyfin",
                             image=f"{image}:{tag}",
-                            ports=[
-                                k8s.core.v1.ContainerPortArgs(
-                                    container_port=port, name="http"
-                                )
-                            ],
+                            ports=[k8s.core.v1.ContainerPortArgs(container_port=port, name="http")],
                             env=env_vars,
                             volume_mounts=volume_mounts,
-                            resources=k8s.core.v1.ResourceRequirementsArgs(**resources)
-                            if resources
-                            else None,
+                            resources=k8s.core.v1.ResourceRequirementsArgs(**resources) if resources else None,
                         )
                     ],
                     volumes=[
                         k8s.core.v1.VolumeArgs(
                             name="nfs-data",
-                            persistent_volume_claim=k8s.core.v1.PersistentVolumeClaimVolumeSourceArgs(
-                                claim_name=nfs_storage["pvc"].metadata.name
-                            ),
+                            persistent_volume_claim=k8s.core.v1.PersistentVolumeClaimVolumeSourceArgs(claim_name=pvc.metadata.name),
                         )
                     ],
                 ),
@@ -128,20 +120,16 @@ def create_jellyfin_deployment(
         metadata=k8s.meta.v1.ObjectMetaArgs(namespace=namespace, labels=app_labels),
         spec=k8s.core.v1.ServiceSpecArgs(
             type=service_type,
-            ports=[
-                k8s.core.v1.ServicePortArgs(port=port, target_port="http", name="http")
-            ],
+            ports=[k8s.core.v1.ServicePortArgs(port=port, target_port="http", name="http")],
             selector=app_labels,
         ),
     )
 
-    ingress = create_traefik_ingress(
-        "jellyfin", ALLOWED_DOMAINS.TM, port, namespace=namespace
-    )
+    ingress = create_traefik_ingress("jellyfin", ALLOWED_DOMAINS.TM, port, namespace=namespace)
 
     return {
-        "pv": nfs_storage["pv"],
-        "pvc": nfs_storage["pvc"],
+        "pv": pv,
+        "pvc": pvc,
         "deployment": deployment,
         "service": service,
         "ingress": ingress,

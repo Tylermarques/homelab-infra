@@ -31,6 +31,4 @@ ingress = create_traefik_ingress(
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # Argocd app to update based on github actions
-marquescg_com = k8s.yaml.ConfigFile(
-    "marquescg_com", os.path.join(current_dir, "argoApp.yaml")
-)
+marquescg_com = k8s.yaml.ConfigFile("marquescg_com", os.path.join(current_dir, "argoApp.yaml"))
