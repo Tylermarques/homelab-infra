@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-beat
+  template:
+    metadata:
+      labels:
+        app: celery-beat
+    spec:
+      imagePullSecrets:
+        - name: gchrio-cred
+      containers:
+        - name: celery-beat
+          image: meeting-tools-diarization:latest
+          imagePullPolicy: IfNotPresent
+          command: ["celery", "-A", "tasks", "beat", "--loglevel=info"]
+          env:
+            #Configuration variables
+            - name: DATA_DIR
+              valueFrom:
+                configMapKeyRef:
+                  name: meeting-tools-config
+                  key: data
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: meeting-tools-config
+                  key: rabbitmq
+            - name: FASTAPI_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: meeting-tools-config
+                  key: backendurlinternal
+            - name: MODEL_FILE
+              valueFrom:
+                configMapKeyRef:
+                  name: meeting-tools-config
+                  key: modelfile
+            # Secret variables
+            - name: HUGGINGFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: huggingface
+            - name: INTERFACE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: meeting-tools-secrets
+                  key: interface
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/data
+      volumes:
+        - name: data-volume
+          nfs:
+            server: 192.168.0.71
+            path: /main/plex/meeting-tools/prod/data
+      restartPolicy: Always

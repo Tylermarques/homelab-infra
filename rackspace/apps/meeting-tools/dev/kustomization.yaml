@@ -1,0 +1,26 @@
+namePrefix: dev-
+namespace: meeting-tools
+resources:
+  - ./../base
+  - ./ingress.yaml
+  - ./config.yaml
+patches:
+  - path: ./secret-ref.yaml
+  - path: ./volumes.yaml
+  - path: ./app-name.yaml
+  - target:
+      group: keda.sh
+      version: v1alpha1
+      kind: ScaledObject
+      name: keda-autoscaler
+    path: ./scaler.yaml
+images:
+  - name: meeting-tools-backend
+    newName: ghcr.io/marquescg/meeting-tools-backend
+    newTag: 8c05498db0227a8e9239b4048bca2ac3774c8863
+  - name: meeting-tools-frontend
+    newName: ghcr.io/marquescg/meeting-tools-frontend-dev
+    newTag: 8c05498db0227a8e9239b4048bca2ac3774c8863
+  - name: meeting-tools-diarization
+    newName: ghcr.io/marquescg/meeting-tools-diarization
+    newTag: 8c05498db0227a8e9239b4048bca2ac3774c8863

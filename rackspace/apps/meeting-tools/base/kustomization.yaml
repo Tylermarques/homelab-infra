@@ -1,0 +1,9 @@
+resources:
+  - backend-deployment.yaml
+  - frontend-deployment.yaml
+  - directory-watcher-deployment.yaml
+  - diarization-worker-deployment.yaml
+  - mongodb-deployment.yaml
+  - rabbitmq-deployment.yaml
+  - celery-beat-deployment.yaml
+  - keda-scaler.yaml

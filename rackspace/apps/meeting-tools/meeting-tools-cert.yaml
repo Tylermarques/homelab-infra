@@ -1,0 +1,15 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: meeting-tools-com
+  namespace: meeting-tools
+spec:
+  secretName: meeting-tools-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.meeting-tools.marquescg.com"
+  dnsNames:
+    - "meeting-tools.marquescg.com"
+    - "*.meeting-tools.marquescg.com"

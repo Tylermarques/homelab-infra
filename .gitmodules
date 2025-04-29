@@ -1,3 +1,0 @@
-[submodule "apps/k8s-mediaserver-operator"]
-	path = apps/k8s-mediaserver-operator
-	url = https://github.com/kubealex/k8s-mediaserver-operator.git

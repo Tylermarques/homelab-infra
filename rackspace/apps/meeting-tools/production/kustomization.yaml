@@ -1,0 +1,16 @@
+namePrefix: prod-
+namespace: meeting-tools
+resources:
+  - ./../base
+  - ./ingress.yaml
+  - ./config.yaml
+images:
+  - name: meeting-tools-backend
+    newName: ghcr.io/marquescg/meeting-tools-backend
+    newTag: a7eee9cd12492441400d45abf87352d68839cb98
+  - name: meeting-tools-frontend
+    newName: ghcr.io/marquescg/meeting-tools-frontend
+    newTag: a7eee9cd12492441400d45abf87352d68839cb98
+  - name: meeting-tools-diarization
+    newName: ghcr.io/marquescg/meeting-tools-diarization
+    newTag: a7eee9cd12492441400d45abf87352d68839cb98

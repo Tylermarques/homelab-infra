@@ -1,0 +1,25 @@
+namespace: meeting-tools
+
+resources:
+  - ./../base
+  - ./data-volume.yaml
+  - ./secrets.yaml # For local testing, you should expect to have the secrets.yaml file defined
+  - ./config.yaml
+
+patches:
+  - path: ./volumes.yaml
+  - target:
+      group: keda.sh
+      version: v1alpha1
+      kind: ScaledObject
+      name: keda-autoscaler
+    path: ./scaler.yaml
+
+images:
+  - name: meeting-tools-backend
+    newTag: latest
+  - name: meeting-tools-frontend
+    newTag: latest
+  - name: meeting-tools-diarization
+    newTag: latest
+

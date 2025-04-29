@@ -1,0 +1,58 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: meeting-tools
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`meeting-tools.marquescg.com`) && PathPrefix(`/api`) && !PathPrefix(`/dev/api`)
+      priority: 25
+      services:
+        - name: prod-backend-service
+          port: 8000
+    - kind: Rule
+      match: Host(`meeting-tools.marquescg.com`) && !PathPrefix(`/dev`)
+      priority: 10
+      services:
+        - name: prod-frontend-service
+          port: 3000
+  tls:
+    secretName: meeting-tools-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: meeting-tools-http
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`meeting-tools.marquescg.com`) && PathPrefix(`/api`) && !PathPrefix(`/dev/api`)
+      priority: 20
+      middlewares:
+        - name: prod-https-redirect
+      services:
+        - name: prod-backend-service
+          port: 8000
+    - kind: Rule
+      match: Host(`meeting-tools.marquescg.com`) && !PathPrefix(`/dev`)
+      priority: 10
+      middlewares:
+        - name: prod-https-redirect
+      services:
+        - name: prod-frontend-service
+          port: 3000
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true

@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-pv-claim
+          nfs: 
+            $patch: delete
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: diarization-worker-deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-pv-claim
+          nfs: 
+            $patch: delete
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: model-claim
+          nfs:
+            $patch: delete
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat-deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-pv-claim
+          nfs: 
+            $patch: delete
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: directory-watcher-deployment
+spec:
+  template:
+    spec:
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: data-pv-claim
+          nfs: 
+            $patch: delete
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: model-claim
+          nfs:
+            $patch: delete
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+spec:
+  template:
+    spec:
+      volumes:
+        - name: mongodb-storage
+          persistentVolumeClaim:
+            claimName: data-pv-claim
+          nfs: 
+            $patch: delete
