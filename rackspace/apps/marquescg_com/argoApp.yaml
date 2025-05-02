@@ -3,11 +3,11 @@ kind: Application
 metadata:
   annotations:
     notified.notifications.argoproj.io: '{"95f976e7cd0da9515ef6e2830a8f8c5d68840d05:on-deployed:[0].Yv81TUs0gmPTEyk-v8Lb6ZKEo0g:ntfy:":1734045580,"on-sync-succeeded:[0].IwKhHw9Hu8IE3z5Y8CQE4vReLYs:ntfy-service:":1742930015,"on-sync-succeeded:[0].IwKhHw9Hu8IE3z5Y8CQE4vReLYs:ntfy:":1734045579,"tylermarques-com:on-created:[0].X_5TO4MPCKAyY0ipFgr6_IraRNs:ntfy:":1734045579}'
-  name: marquescg-com
+  name: marquescgcom
   namespace: argocd
 spec:
   destination:
-    namespace: marquescg-com
+    namespace: marquescgcom
     server: https://kubernetes.default.svc
   project: default
   source:
