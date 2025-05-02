@@ -17,7 +17,7 @@ chart = k8s.helm.v3.Chart(
     "grafana",
     k8s.helm.v3.ChartOpts(
         chart="grafana",
-        version="",
+        version="v8.14.1",
         fetch_opts=k8s.helm.v3.FetchOpts(
             repo="https://grafana.github.io/helm-charts",
         ),

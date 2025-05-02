@@ -11,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: apps/marquescg_com/production
+    path: rackspace/apps/marquescg_com/production
     repoURL: https://github.com/Tylermarques/homelab-infra
     targetRevision: HEAD
   syncPolicy:
