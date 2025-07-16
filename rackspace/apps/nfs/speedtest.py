@@ -133,7 +133,7 @@ cron_job = k8s.batch.v1.CronJob(
         labels=bench_labels,
     ),
     spec=k8s.batch.v1.CronJobSpecArgs(
-        schedule="*/1 * * * *",  # at :15 every hour
+        schedule="0 * * * *",  # at :00 every hour
         concurrency_policy="Forbid",
         successful_jobs_history_limit=1,
         failed_jobs_history_limit=3,

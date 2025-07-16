@@ -88,7 +88,7 @@ def create_traefik_ingress(
     if create_root:
         if name != host_domain.value:
             raise ValueError("You provided a name that was not the host_domain, but also create_root. The name cannot be used")
-        route["match"] = f"Host(`{host_domain.value}`)"
+        route["match"] = f"Host(`{host_domain.value}`) || Host(`www.{host_domain.value}`)"
 
     # Create the route spec
     if tailnet_only:
@@ -102,6 +102,7 @@ def create_traefik_ingress(
         # Secret name for the TLS certificate
         secret_name = f"{name}-tls"
         ingress_route_spec["tls"] = {"secretName": secret_name}
+        hosts = [hostname, f"www.{hostname}"] if create_root else [hostname]
         certificate = k8s.apiextensions.CustomResource(
             f"{name}-certificate",
             api_version="cert-manager.io/v1",
@@ -116,7 +117,7 @@ def create_traefik_ingress(
                     "name": cert_issuer,
                     "kind": "ClusterIssuer",
                 },
-                "dnsNames": [hostname],
+                "dnsNames": hosts,
             },
         )
 
