@@ -159,9 +159,7 @@ def create_cloudflare_A_record(subdomain: str, domain: ALLOWED_DOMAINS, ip=racks
 
 TM_DOMAINS = {
     "hass": {"proxied": False, "content": home_ip},
-    "plex": {"proxied": False, "content": home_ip},
     "immich": {"proxied": False, "content": home_ip},
-    "tylermarques.com": {"proxied": True, "content": home_ip},
     "overseerr": {"proxied": True, "content": home_ip},
     "mealie": {"proxied": True, "content": home_ip},
     "ntfy": {"proxied": True, "content": home_ip},

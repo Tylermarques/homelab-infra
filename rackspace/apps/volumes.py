@@ -9,6 +9,7 @@ from pulumi_kubernetes.core.v1 import VolumeResourceRequirementsArgs
 def create_nfs_pv_and_pvc(
     name,
     namespace,
+    # TODO Replace this with full address. proxmox-egress.default.svc.cluster.local
     server="proxmox-egress",
     share_path="/main/plex",
     storage_size="50Gi",
