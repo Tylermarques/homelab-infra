@@ -163,7 +163,7 @@ TM_DOMAINS = {
     "immich": {"proxied": False, "content": home_ip},
     "tylermarques.com": {"proxied": True, "content": home_ip},
     "overseerr": {"proxied": True, "content": home_ip},
-    "mealie": {"proxied": True, "content": home_ip},
+    "mealie": {"proxied": True, "content": rackspace_ip},
     "ntfy": {"proxied": True, "content": home_ip},
     "sftp": {"proxied": True, "content": home_ip},
     "terraria": {"proxied": False, "content": rackspace_ip},

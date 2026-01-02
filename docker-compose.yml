@@ -1,0 +1,141 @@
+services:
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - /nfs/library/config/radarr:/config
+      - /nfs/library/library/movies:/movies
+      - /nfs/library/library/downloads:/downloads
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+    networks:
+      - media
+    depends_on:
+      - sabnzbd
+      - transmission
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - /nfs/library/config/sonarr:/config
+      - /nfs/library/library/tv:/tv
+      - /nfs/library/library/downloads:/downloads
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    networks:
+      - media
+    depends_on:
+      - sabnzbd
+      - transmission
+
+  lidarr:
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - /nfs/library/config/lidarr:/config
+      - /nfs/library/library/music:/music
+      - /nfs/library/library/downloads:/downloads
+    ports:
+      - "8686:8686"
+    restart: unless-stopped
+    networks:
+      - media
+    depends_on:
+      - sabnzbd
+      - transmission
+
+  prowlarr:
+    image: linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - /nfs/library/config/prowlarr:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+    networks:
+      - media
+
+  jackett:
+    image: linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - /nfs/library/config/jackett:/config
+      - /nfs/library/library/downloads:/data/downloads
+    ports:
+      - "9117:9117"
+    restart: unless-stopped
+    networks:
+      - media
+
+  sabnzbd:
+    image: linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - /nfs/library/config/sabnzbd:/config
+      - /nfs/library/library/downloads:/downloads
+      - /nfs/library/sabnzbd:/incomplete-downloads
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - media
+
+  transmission:
+    image: haugene/transmission-openvpn:latest
+    container_name: transmission-openvpn
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - OPENVPN_PROVIDER=PIA
+      - OPENVPN_USERNAME=${OPENVPN_USERNAME}
+      - OPENVPN_PASSWORD=${OPENVPN_PASSWORD}
+      - OPENVPN_CONFIG=ca_toronto
+      - LOCAL_NETWORK=192.168.2.0/24
+    volumes:
+      - /nfs/library/config/transmission:/config
+      - /nfs/library/library/downloads:/downloads
+      - /nfs/library/transmission:/watch
+    ports:
+      - "9091:9091"
+      - "51413:51413"
+      - "51413:51413/udp"
+    restart: unless-stopped
+    networks:
+      - media
+
+networks:
+  media:
+    driver: bridge
