@@ -37,7 +37,7 @@ def create_nfs_pv_and_pvc(
             ),
         ),
         # Remove this before replacing it.
-        opts=ResourceOptions(delete_before_replace=True),
+        # opts=ResourceOptions(delete_before_replace=True),
     )
 
     # Create Persistent Volume Claim
@@ -51,7 +51,7 @@ def create_nfs_pv_and_pvc(
             storage_class_name=storage_class_name,
         ),
         # Remove this before replacing it.
-        opts=ResourceOptions(delete_before_replace=True),
+        # opts=ResourceOptions(delete_before_replace=True),
     )
 
     return (pv, pvc)

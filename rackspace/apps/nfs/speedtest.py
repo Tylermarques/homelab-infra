@@ -4,7 +4,7 @@ from apps.volumes import create_nfs_pv_and_pvc
 from textwrap import dedent
 
 pv, pvc = create_nfs_pv_and_pvc(
-    name="nfs-test",  # <- logical name; will create nfs-test-nfs-pv / -pvc
+    name="nfs-speedtest",  # <- logical name; will create nfs-test-nfs-pv / -pvc
     namespace="monitoring",  # <- must match CronJob namespace
     server="proxmox-egress",
     share_path="/main/plex",

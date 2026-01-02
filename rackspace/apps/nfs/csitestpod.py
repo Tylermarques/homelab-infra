@@ -26,7 +26,6 @@ nfs_test_pod = k8s.core.v1.Pod(
     metadata=k8s.meta.v1.ObjectMetaArgs(
         name="nfs-csi-test-pod",
         namespace="default",
-        annotations={"tailscale.com/inject": "true"},
     ),
     spec=k8s.core.v1.PodSpecArgs(
         containers=[

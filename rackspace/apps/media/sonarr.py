@@ -4,10 +4,10 @@ from ..volumes import create_nfs_pv_and_pvc
 from .namespace import media_namespace
 
 
-def create_transmission_deployment(
+def create_sonarr_deployment(
     namespace=media_namespace.metadata.name,
     enabled=True,
-    ingress_host="transmission.local",
+    ingress_host="sonarr.local",
     puid=1000,
     pgid=1000,
     nfs_config={
@@ -17,32 +17,28 @@ def create_transmission_deployment(
         "storage_class_name": "nfs-csi",
     },
     sub_paths={
-        "config": "config/transmission",
+        "config": "config/sonarr",
+        "tv": "library/tv",
         "downloads": "library/downloads",
-        "transmission": "transmission",
     },
     node_selector={},
     replica_count=1,
-    image="docker.io/linuxserver/transmission",
+    image="docker.io/linuxserver/sonarr",
     tag="latest",
-    utp_port=9091,
-    peer_port=51413,
+    port=8989,
     service_type="ClusterIP",
     resources={},
     use_tailscale=True,
-    auth_enabled=False,
-    auth_username="",
-    auth_password="",
 ):
     if not enabled:
         return None
 
     # Create Labels
-    app_labels = {"app": "transmission"}
+    app_labels = {"app": "sonarr"}
 
     # Create NFS PV and PVC
     pv, pvc = create_nfs_pv_and_pvc(
-        name="transmission",
+        name="sonarr",
         namespace=namespace,
         server=nfs_config["server"],
         share_path=nfs_config["share_path"],
@@ -57,15 +53,6 @@ def create_transmission_deployment(
         k8s.core.v1.EnvVarArgs(name="TZ", value="UTC"),
     ]
 
-    # Add authentication environment variables if enabled
-    if auth_enabled:
-        env_vars.extend(
-            [
-                k8s.core.v1.EnvVarArgs(name="USER", value=auth_username),
-                k8s.core.v1.EnvVarArgs(name="PASS", value=auth_password),
-            ]
-        )
-
     # Create volume mounts
     volume_mounts = [
         k8s.core.v1.VolumeMountArgs(
@@ -75,13 +62,13 @@ def create_transmission_deployment(
         ),
         k8s.core.v1.VolumeMountArgs(
             name="nfs-data",
-            mount_path="/downloads",
-            sub_path=sub_paths["downloads"],
+            mount_path="/tv",
+            sub_path=sub_paths["tv"],
         ),
         k8s.core.v1.VolumeMountArgs(
             name="nfs-data",
-            mount_path="/watch",
-            sub_path=sub_paths["transmission"],
+            mount_path="/downloads",
+            sub_path=sub_paths["downloads"],
         ),
     ]
 
@@ -93,7 +80,7 @@ def create_transmission_deployment(
 
     # Create Deployment
     deployment = k8s.apps.v1.Deployment(
-        "transmission",
+        "sonarr",
         metadata=k8s.meta.v1.ObjectMetaArgs(namespace=namespace, labels=app_labels),
         spec=k8s.apps.v1.DeploymentSpecArgs(
             replicas=replica_count,
@@ -104,13 +91,9 @@ def create_transmission_deployment(
                     node_selector=node_selector,
                     containers=[
                         k8s.core.v1.ContainerArgs(
-                            name="transmission",
+                            name="sonarr",
                             image=f"{image}:{tag}",
-                            ports=[
-                                k8s.core.v1.ContainerPortArgs(container_port=utp_port, name="utp"),
-                                k8s.core.v1.ContainerPortArgs(container_port=peer_port, name="peer", protocol="TCP"),
-                                k8s.core.v1.ContainerPortArgs(container_port=peer_port, name="peer-udp", protocol="UDP"),
-                            ],
+                            ports=[k8s.core.v1.ContainerPortArgs(container_port=port, name="http")],
                             env=env_vars,
                             volume_mounts=volume_mounts,
                             resources=k8s.core.v1.ResourceRequirementsArgs(**resources) if resources else None,
@@ -127,50 +110,34 @@ def create_transmission_deployment(
         ),
     )
 
-    # Create Service for UTP (web interface)
-    utp_service = k8s.core.v1.Service(
-        "transmission-utp",
+    # Create Service
+    service = k8s.core.v1.Service(
+        "sonarr",
         metadata=k8s.meta.v1.ObjectMetaArgs(namespace=namespace, labels=app_labels),
         spec=k8s.core.v1.ServiceSpecArgs(
             type=service_type,
-            ports=[k8s.core.v1.ServicePortArgs(port=utp_port, target_port="utp", name="utp")],
+            ports=[k8s.core.v1.ServicePortArgs(port=port, target_port="http", name="http")],
             selector=app_labels,
         ),
     )
 
-    # Create Service for Peer connections
-    peer_service = k8s.core.v1.Service(
-        "transmission-peer",
-        metadata=k8s.meta.v1.ObjectMetaArgs(namespace=namespace, labels=app_labels),
-        spec=k8s.core.v1.ServiceSpecArgs(
-            type=service_type,
-            ports=[
-                k8s.core.v1.ServicePortArgs(port=peer_port, target_port="peer", name="peer-tcp", protocol="TCP"),
-                k8s.core.v1.ServicePortArgs(port=peer_port, target_port="peer-udp", name="peer-udp", protocol="UDP"),
-            ],
-            selector=app_labels,
-        ),
-    )
-
-    # Transmission is local-only, no ingress needed
+    # Sonarr is local-only, no ingress needed
     ingress = None
 
     return {
         "pv": pv,
         "pvc": pvc,
         "deployment": deployment,
-        "utp_service": utp_service,
-        "peer_service": peer_service,
+        "service": service,
         "ingress": ingress,
     }
 
 
 # Export the resources if this file is being run directly
-transmission = create_transmission_deployment()
-if transmission:
-    pulumi.export("transmission-pv", transmission["pv"].metadata.name)
-    pulumi.export("transmission-pvc", transmission["pvc"].metadata.name)
-    pulumi.export("transmission-deployment", transmission["deployment"].metadata.name)
-    pulumi.export("transmission-utp-service", transmission["utp_service"].metadata.name)
-    pulumi.export("transmission-peer-service", transmission["peer_service"].metadata.name)
+sonarr = create_sonarr_deployment()
+if sonarr:
+    pulumi.export("sonarr-pv", sonarr["pv"].metadata.name)
+    pulumi.export("sonarr-pvc", sonarr["pvc"].metadata.name)
+    pulumi.export("sonarr-deployment", sonarr["deployment"].metadata.name)
+    pulumi.export("sonarr-service", sonarr["service"].metadata.name)
 

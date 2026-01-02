@@ -26,7 +26,7 @@ def create_lidarr_deployment(
     replica_count=1,
     image="docker.io/linuxserver/lidarr",
     tag="latest",
-    port=8096,
+    port=8686,
     service_type="ClusterIP",
     resources={},
     use_tailscale=True,
@@ -63,12 +63,12 @@ def create_lidarr_deployment(
         ),
         k8s.core.v1.VolumeMountArgs(
             name="nfs-data",
-            mount_path="/data/music",
+            mount_path="/music",
             sub_path=sub_paths["music"],
         ),
         k8s.core.v1.VolumeMountArgs(
             name="nfs-data",
-            mount_path="/data/downloads",
+            mount_path="/downloads",
             sub_path=sub_paths["downloads"],
         ),
     ]
