@@ -1,0 +1,8 @@
+config:
+  pulumi:autonaming:
+    mode: verbatim
+  homelab-talos:cluster_name: homelab
+  homelab-talos:talos_version: v1.9.0
+  homelab-talos:proxmox_node: proxmox
+  homelab-talos:storage_pool: local-lvm
+  homelab-talos:network_bridge: vmbr0

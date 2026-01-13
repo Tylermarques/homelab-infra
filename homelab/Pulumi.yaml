@@ -1,0 +1,10 @@
+name: homelab-talos
+description: Talos Linux Kubernetes cluster on Proxmox
+runtime:
+  name: python
+  options:
+    toolchain: uv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: talos-proxmox-python

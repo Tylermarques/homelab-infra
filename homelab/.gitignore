@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Environment
+.env
+!.env.example
+
+# Pulumi
+*.bak
+
+# Generated outputs
+kubeconfig
+talosconfig
