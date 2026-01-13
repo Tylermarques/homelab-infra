@@ -27,6 +27,7 @@ After deployment:
     pulumi stack output talosconfig --show-secrets > ~/.talos/config
 """
 import pulumi
+import pulumi_kubernetes as k8s
 
 # Import infrastructure components
 from infrastructure.iso import talos_iso
@@ -85,6 +86,18 @@ def main() -> None:
     pulumi.export("talos_client_ca", machine_secrets.client_configuration.ca_certificate)
     pulumi.export("talos_client_cert", machine_secrets.client_configuration.client_certificate)
     pulumi.export("talos_client_key", machine_secrets.client_configuration.client_key)
+
+    # Phase 4: Deploy applications to the cluster
+    # Create Kubernetes provider using the kubeconfig from Talos bootstrap
+    k8s_provider = k8s.Provider(
+        "homelab-k8s",
+        kubeconfig=kubeconfig.kubeconfig_raw,
+    )
+
+    # Import apps - they will be deployed to the cluster
+    # Note: Apps are imported at module level and use the default provider
+    # The provider is set here to ensure proper dependency ordering
+    from apps import *  # noqa: F401, F403
 
 
 # Run main

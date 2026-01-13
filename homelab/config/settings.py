@@ -42,6 +42,17 @@ class TailscaleSettings(BaseSettings):
         extra = "ignore"
 
 
+class TailscaleOperatorSettings(BaseSettings):
+    """Tailscale operator OAuth credentials for Kubernetes."""
+
+    client_id: str = Field(alias="TAILSCALE_OPERATOR_CLIENT_ID")
+    client_secret: str = Field(alias="TAILSCALE_OPERATOR_CLIENT_SECRET")
+
+    class Config:
+        env_file = ".env"
+        extra = "ignore"
+
+
 # Load Pulumi config to override defaults
 config = pulumi.Config("homelab-talos")
 
@@ -56,3 +67,4 @@ cluster_settings.storage_pool = config.get("storage_pool") or cluster_settings.s
 cluster_settings.network_bridge = config.get("network_bridge") or cluster_settings.network_bridge
 
 tailscale_settings = TailscaleSettings()
+tailscale_operator_settings = TailscaleOperatorSettings()
