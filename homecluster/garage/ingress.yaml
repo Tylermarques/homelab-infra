@@ -1,0 +1,35 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: garage-s3
+  namespace: garage
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`s3.tylermarques.com`)
+      priority: 10
+      services:
+        - name: garage-s3
+          port: 3900
+  tls:
+    secretName: star-tylermarques-prod-tls
+---
+# Internal access via Tailnet (no TLS required for internal cluster traffic)
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: garage-s3-internal
+  namespace: garage
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`s3.garage.local`) || Host(`garage-s3.garage.svc.cluster.local`)
+      priority: 10
+      services:
+        - name: garage-s3
+          port: 3900

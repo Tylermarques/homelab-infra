@@ -1,0 +1,111 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backblaze-credentials
+  namespace: garage
+type: Opaque
+stringData:
+  # Backblaze B2 credentials
+  # Get these from Backblaze B2 console: App Keys section
+  B2_ACCOUNT_ID: "REPLACE_WITH_B2_KEY_ID"
+  B2_ACCOUNT_KEY: "REPLACE_WITH_B2_APP_KEY"
+  # Restic repository password for encryption
+  # Generate with: openssl rand -base64 32
+  RESTIC_PASSWORD: "REPLACE_WITH_RESTIC_PASSWORD"
+  # Bucket name in B2
+  RESTIC_REPOSITORY: "b2:homelab-garage-backup"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: garage-backup
+  namespace: garage
+spec:
+  # Run daily at 3 AM
+  schedule: "0 3 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          # Must run on same node as Garage to access hostPath
+          # TODO: Update with actual worker node hostname
+          nodeSelector:
+            kubernetes.io/hostname: "REPLACE_WITH_WORKER_NODE_HOSTNAME"
+          restartPolicy: OnFailure
+          containers:
+            - name: restic
+              image: restic/restic:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  echo "Starting Garage backup to Backblaze B2..."
+
+                  # Check if repository exists, if not initialize it
+                  restic snapshots || restic init
+
+                  # Run backup
+                  restic backup /data \
+                    --verbose \
+                    --tag garage \
+                    --tag homelab \
+                    --exclude '/data/meta/*.tmp' \
+                    --exclude '/data/blocks/*.tmp'
+
+                  # Prune old backups (keep last 7 daily, 4 weekly, 6 monthly)
+                  restic forget \
+                    --keep-daily 7 \
+                    --keep-weekly 4 \
+                    --keep-monthly 6 \
+                    --prune
+
+                  # Check repository integrity (weekly on Sundays)
+                  if [ "$(date +%u)" = "7" ]; then
+                    echo "Running weekly integrity check..."
+                    restic check
+                  fi
+
+                  echo "Backup completed successfully!"
+              env:
+                - name: B2_ACCOUNT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: backblaze-credentials
+                      key: B2_ACCOUNT_ID
+                - name: B2_ACCOUNT_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backblaze-credentials
+                      key: B2_ACCOUNT_KEY
+                - name: RESTIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backblaze-credentials
+                      key: RESTIC_PASSWORD
+                - name: RESTIC_REPOSITORY
+                  valueFrom:
+                    secretKeyRef:
+                      name: backblaze-credentials
+                      key: RESTIC_REPOSITORY
+              volumeMounts:
+                - name: garage-data
+                  mountPath: /data
+                  readOnly: true
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+          volumes:
+            - name: garage-data
+              hostPath:
+                path: /mnt/garage
+                type: Directory
