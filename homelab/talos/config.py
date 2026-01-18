@@ -160,38 +160,40 @@ def generate_machine_configuration(node: NodeSpec) -> talos.machine.GetConfigura
     # Workaround for Pulumi Python issue with composite output types
     # See: https://github.com/pulumiverse/pulumi-talos/issues/93
     # We need to explicitly construct the machine_secrets dict with all fields
+    # Note: Use ["secret"] instead of .secret to avoid collision with Output.secret method
+    ms = machine_secrets.machine_secrets
     secrets_input = {
         "certs": {
             "etcd": {
-                "cert": machine_secrets.machine_secrets.certs.etcd.cert,
-                "key": machine_secrets.machine_secrets.certs.etcd.key,
+                "cert": ms.certs.etcd.cert,
+                "key": ms.certs.etcd.key,
             },
             "k8s": {
-                "cert": machine_secrets.machine_secrets.certs.k8s.cert,
-                "key": machine_secrets.machine_secrets.certs.k8s.key,
+                "cert": ms.certs.k8s.cert,
+                "key": ms.certs.k8s.key,
             },
             "k8s_aggregator": {
-                "cert": machine_secrets.machine_secrets.certs.k8s_aggregator.cert,
-                "key": machine_secrets.machine_secrets.certs.k8s_aggregator.key,
+                "cert": ms.certs.k8s_aggregator.cert,
+                "key": ms.certs.k8s_aggregator.key,
             },
             "k8s_serviceaccount": {
-                "key": machine_secrets.machine_secrets.certs.k8s_serviceaccount.key,
+                "key": ms.certs.k8s_serviceaccount.key,
             },
             "os": {
-                "cert": machine_secrets.machine_secrets.certs.os.cert,
-                "key": machine_secrets.machine_secrets.certs.os.key,
+                "cert": ms.certs.os.cert,
+                "key": ms.certs.os.key,
             },
         },
         "cluster": {
-            "id": machine_secrets.machine_secrets.cluster.id,
-            "secret": machine_secrets.machine_secrets.cluster.secret,
+            "id": ms.cluster.id,
+            "secret": ms.cluster["secret"],
         },
         "secrets": {
-            "bootstrap_token": machine_secrets.machine_secrets.secrets.bootstrap_token,
-            "secretbox_encryption_secret": machine_secrets.machine_secrets.secrets.secretbox_encryption_secret,
+            "bootstrap_token": ms.secrets.bootstrap_token,
+            "secretbox_encryption_secret": ms.secrets.secretbox_encryption_secret,
         },
         "trustdinfo": {
-            "token": machine_secrets.machine_secrets.trustdinfo.token,
+            "token": ms.trustdinfo.token,
         },
     }
 
