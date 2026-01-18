@@ -157,11 +157,49 @@ def generate_machine_configuration(node: NodeSpec) -> talos.machine.GetConfigura
         first_cp = CONTROL_PLANE_NODES[0]
         endpoint = f"https://{first_cp.name}:6443"
 
+    # Workaround for Pulumi Python issue with composite output types
+    # See: https://github.com/pulumiverse/pulumi-talos/issues/93
+    # We need to explicitly construct the machine_secrets dict with all fields
+    secrets_input = {
+        "certs": {
+            "etcd": {
+                "cert": machine_secrets.machine_secrets.certs.etcd.cert,
+                "key": machine_secrets.machine_secrets.certs.etcd.key,
+            },
+            "k8s": {
+                "cert": machine_secrets.machine_secrets.certs.k8s.cert,
+                "key": machine_secrets.machine_secrets.certs.k8s.key,
+            },
+            "k8s_aggregator": {
+                "cert": machine_secrets.machine_secrets.certs.k8s_aggregator.cert,
+                "key": machine_secrets.machine_secrets.certs.k8s_aggregator.key,
+            },
+            "k8s_serviceaccount": {
+                "key": machine_secrets.machine_secrets.certs.k8s_serviceaccount.key,
+            },
+            "os": {
+                "cert": machine_secrets.machine_secrets.certs.os.cert,
+                "key": machine_secrets.machine_secrets.certs.os.key,
+            },
+        },
+        "cluster": {
+            "id": machine_secrets.machine_secrets.cluster.id,
+            "secret": machine_secrets.machine_secrets.cluster.secret,
+        },
+        "secrets": {
+            "bootstrap_token": machine_secrets.machine_secrets.secrets.bootstrap_token,
+            "secretbox_encryption_secret": machine_secrets.machine_secrets.secrets.secretbox_encryption_secret,
+        },
+        "trustdinfo": {
+            "token": machine_secrets.machine_secrets.trustdinfo.token,
+        },
+    }
+
     config = talos.machine.get_configuration_output(
         cluster_name=cluster_settings.name,
         cluster_endpoint=endpoint,
         machine_type=node.role,
-        machine_secrets=machine_secrets.machine_secrets,
+        machine_secrets=secrets_input,
         talos_version=cluster_settings.talos_version,
         config_patches=get_config_patches(node),
         docs=False,
