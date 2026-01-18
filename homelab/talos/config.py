@@ -159,53 +159,35 @@ def generate_machine_configuration(node: NodeSpec) -> talos.machine.GetConfigura
 
     # Workaround for Pulumi Python issue with composite output types
     # See: https://github.com/pulumiverse/pulumi-talos/issues/93
-    # We need to explicitly construct the machine_secrets dict with all fields
-    # Note: Use bracket notation ["key"] to avoid collisions with Output methods like .secret
-    ms = machine_secrets.machine_secrets
-    secrets_input = {
-        "certs": {
-            "etcd": {
-                "cert": ms["certs"]["etcd"]["cert"],
-                "key": ms["certs"]["etcd"]["key"],
+    # Use apply() to extract the resolved machine_secrets value and pass it through
+    config = machine_secrets.machine_secrets.apply(
+        lambda ms: talos.machine.get_configuration(
+            cluster_name=cluster_settings.name,
+            cluster_endpoint=endpoint,
+            machine_type=node.role,
+            machine_secrets={
+                "certs": {
+                    "etcd": {"cert": ms.certs.etcd.cert, "key": ms.certs.etcd.key},
+                    "k8s": {"cert": ms.certs.k8s.cert, "key": ms.certs.k8s.key},
+                    "k8s_aggregator": {
+                        "cert": ms.certs.k8s_aggregator.cert,
+                        "key": ms.certs.k8s_aggregator.key,
+                    },
+                    "k8s_serviceaccount": {"key": ms.certs.k8s_serviceaccount.key},
+                    "os": {"cert": ms.certs.os.cert, "key": ms.certs.os.key},
+                },
+                "cluster": {"id": ms.cluster.id, "secret": ms.cluster.secret},
+                "secrets": {
+                    "bootstrap_token": ms.secrets.bootstrap_token,
+                    "secretbox_encryption_secret": ms.secrets.secretbox_encryption_secret,
+                },
+                "trustdinfo": {"token": ms.trustdinfo.token},
             },
-            "k8s": {
-                "cert": ms["certs"]["k8s"]["cert"],
-                "key": ms["certs"]["k8s"]["key"],
-            },
-            "k8s_aggregator": {
-                "cert": ms["certs"]["k8s_aggregator"]["cert"],
-                "key": ms["certs"]["k8s_aggregator"]["key"],
-            },
-            "k8s_serviceaccount": {
-                "key": ms["certs"]["k8s_serviceaccount"]["key"],
-            },
-            "os": {
-                "cert": ms["certs"]["os"]["cert"],
-                "key": ms["certs"]["os"]["key"],
-            },
-        },
-        "cluster": {
-            "id": ms["cluster"]["id"],
-            "secret": ms["cluster"]["secret"],
-        },
-        "secrets": {
-            "bootstrap_token": ms["secrets"]["bootstrap_token"],
-            "secretbox_encryption_secret": ms["secrets"]["secretbox_encryption_secret"],
-        },
-        "trustdinfo": {
-            "token": ms["trustdinfo"]["token"],
-        },
-    }
-
-    config = talos.machine.get_configuration_output(
-        cluster_name=cluster_settings.name,
-        cluster_endpoint=endpoint,
-        machine_type=node.role,
-        machine_secrets=secrets_input,
-        talos_version=cluster_settings.talos_version,
-        config_patches=get_config_patches(node),
-        docs=False,
-        examples=False,
+            talos_version=cluster_settings.talos_version,
+            config_patches=get_config_patches(node),
+            docs=False,
+            examples=False,
+        )
     )
 
     return config
