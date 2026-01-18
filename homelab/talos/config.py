@@ -160,40 +160,40 @@ def generate_machine_configuration(node: NodeSpec) -> talos.machine.GetConfigura
     # Workaround for Pulumi Python issue with composite output types
     # See: https://github.com/pulumiverse/pulumi-talos/issues/93
     # We need to explicitly construct the machine_secrets dict with all fields
-    # Note: Use ["secret"] instead of .secret to avoid collision with Output.secret method
+    # Note: Use bracket notation ["key"] to avoid collisions with Output methods like .secret
     ms = machine_secrets.machine_secrets
     secrets_input = {
         "certs": {
             "etcd": {
-                "cert": ms.certs.etcd.cert,
-                "key": ms.certs.etcd.key,
+                "cert": ms["certs"]["etcd"]["cert"],
+                "key": ms["certs"]["etcd"]["key"],
             },
             "k8s": {
-                "cert": ms.certs.k8s.cert,
-                "key": ms.certs.k8s.key,
+                "cert": ms["certs"]["k8s"]["cert"],
+                "key": ms["certs"]["k8s"]["key"],
             },
             "k8s_aggregator": {
-                "cert": ms.certs.k8s_aggregator.cert,
-                "key": ms.certs.k8s_aggregator.key,
+                "cert": ms["certs"]["k8s_aggregator"]["cert"],
+                "key": ms["certs"]["k8s_aggregator"]["key"],
             },
             "k8s_serviceaccount": {
-                "key": ms.certs.k8s_serviceaccount.key,
+                "key": ms["certs"]["k8s_serviceaccount"]["key"],
             },
             "os": {
-                "cert": ms.certs.os.cert,
-                "key": ms.certs.os.key,
+                "cert": ms["certs"]["os"]["cert"],
+                "key": ms["certs"]["os"]["key"],
             },
         },
         "cluster": {
-            "id": ms.cluster.id,
-            "secret": ms.cluster["secret"],
+            "id": ms["cluster"]["id"],
+            "secret": ms["cluster"]["secret"],
         },
         "secrets": {
-            "bootstrap_token": ms.secrets.bootstrap_token,
-            "secretbox_encryption_secret": ms.secrets.secretbox_encryption_secret,
+            "bootstrap_token": ms["secrets"]["bootstrap_token"],
+            "secretbox_encryption_secret": ms["secrets"]["secretbox_encryption_secret"],
         },
         "trustdinfo": {
-            "token": ms.trustdinfo.token,
+            "token": ms["trustdinfo"]["token"],
         },
     }
 
