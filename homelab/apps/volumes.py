@@ -10,8 +10,11 @@ def create_nfs_pv_and_pvc(
     share_path="/main/plex",
     storage_size="50Gi",
     storage_class_name="nfs-csi",
+    k8s_provider=None,
 ) -> Tuple[k8s.core.v1.PersistentVolume, k8s.core.v1.PersistentVolumeClaim]:
     """Create a Persistent Volume and Persistent Volume Claim for NFS storage."""
+
+    opts = ResourceOptions(delete_before_replace=True, provider=k8s_provider)
 
     # Create Persistent Volume
     pv = k8s.core.v1.PersistentVolume(
@@ -32,7 +35,7 @@ def create_nfs_pv_and_pvc(
                 volume_attributes={"server": server, "share": share_path},
             ),
         ),
-        opts=ResourceOptions(delete_before_replace=True),
+        opts=opts,
     )
 
     # Create Persistent Volume Claim
@@ -45,7 +48,7 @@ def create_nfs_pv_and_pvc(
             volume_name=pv.metadata.name,
             storage_class_name=storage_class_name,
         ),
-        opts=ResourceOptions(delete_before_replace=True),
+        opts=opts,
     )
 
     return (pv, pvc)

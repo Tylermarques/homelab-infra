@@ -1,1 +1,1 @@
-from .syncthing import *
+from .syncthing import deploy_syncthing

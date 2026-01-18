@@ -94,10 +94,9 @@ def main() -> None:
         kubeconfig=kubeconfig.kubeconfig_raw,
     )
 
-    # Import apps - they will be deployed to the cluster
-    # Note: Apps are imported at module level and use the default provider
-    # The provider is set here to ensure proper dependency ordering
-    from apps import *  # noqa: F401, F403
+    # Deploy all apps to the cluster with the provider
+    from apps import deploy_all_apps
+    deploy_all_apps(k8s_provider)
 
 
 # Run main
