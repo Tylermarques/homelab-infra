@@ -136,6 +136,27 @@ services:
     networks:
       - media
 
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    user: 1000:1000
+    environment:
+      - TZ=UTC
+    volumes:
+      - /nfs/library/config/jellyfin:/config
+      - /nfs/library/cache/jellyfin:/cache
+      - /nfs/library/library/movies:/media/movies:ro
+      - /nfs/library/library/tv:/media/tv:ro
+      - /nfs/library/library/music:/media/music:ro
+    ports:
+      - "8096:8096"
+      - "7359:7359/udp"
+    restart: unless-stopped
+    networks:
+      - media
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 networks:
   media:
     driver: bridge
