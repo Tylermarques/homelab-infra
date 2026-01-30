@@ -144,7 +144,7 @@ services:
       - TZ=UTC
     volumes:
       - /nfs/library/config/jellyfin:/config
-      - /nfs/library/cache/jellyfin:/cache
+      - jellyfin-cache:/cache
       - /nfs/library/library/movies:/media/movies:ro
       - /nfs/library/library/tv:/media/tv:ro
       - /nfs/library/library/music:/media/music:ro
@@ -160,3 +160,6 @@ services:
 networks:
   media:
     driver: bridge
+
+volumes:
+  jellyfin-cache:
