@@ -7,6 +7,32 @@ from talos.secrets import machine_secrets
 from talos.config import generate_machine_configuration
 
 
+def extract_vm_ip(ipv4_addresses: list[list[str]]) -> str:
+    """
+    Extract the primary non-loopback IP from Proxmox VM ipv4_addresses.
+
+    The ipv4_addresses is a list of lists, where each inner list contains
+    the IP addresses for a network interface. We need to find the first
+    non-loopback address.
+
+    Args:
+        ipv4_addresses: List of IP address lists from QEMU guest agent
+
+    Returns:
+        The first non-loopback IP address, or empty string if none found
+    """
+    if not ipv4_addresses:
+        return ""
+
+    for interface_ips in ipv4_addresses:
+        for ip in interface_ips:
+            # Skip loopback addresses
+            if not ip.startswith("127."):
+                return ip
+
+    return ""
+
+
 def apply_configuration_to_node(
     node: NodeSpec,
     vm: proxmoxve.vm.VirtualMachine,

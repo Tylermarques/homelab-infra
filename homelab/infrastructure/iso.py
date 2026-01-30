@@ -1,8 +1,7 @@
-import json
 from functools import lru_cache
 from pathlib import Path
-import urllib.request
 
+import httpx
 import pulumi
 import pulumi_proxmoxve as proxmoxve
 from config.settings import proxmox_settings, cluster_settings
@@ -29,20 +28,18 @@ def get_schematic_id() -> str:
 
     Raises:
         FileNotFoundError: If schematic.yaml doesn't exist
-        urllib.error.URLError: If the API request fails
+        httpx.HTTPError: If the API request fails
     """
     schematic_content = SCHEMATIC_FILE.read_bytes()
 
-    request = urllib.request.Request(
+    response = httpx.post(
         TALOS_FACTORY_API,
-        data=schematic_content,
+        content=schematic_content,
         headers={"Content-Type": "application/yaml"},
-        method="POST",
+        timeout=30,
     )
-
-    with urllib.request.urlopen(request, timeout=30) as response:
-        result = json.loads(response.read().decode("utf-8"))
-        return result["id"]
+    response.raise_for_status()
+    return response.json()["id"]
 
 
 def get_talos_iso_url(version: str) -> str:

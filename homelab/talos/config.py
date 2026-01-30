@@ -23,7 +23,7 @@ def get_base_config_patches(node: NodeSpec) -> list[str]:
                 "machine": {
                     "install": {
                         "disk": "/dev/sda",
-                        "image": get_talos_installer_image(cluster_settings.talos_version, cluster_settings.talos_schematic_id),
+                        "image": get_talos_installer_image(cluster_settings.talos_version),
                         "bootloader": True,
                         "wipe": False,
                     },

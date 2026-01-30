@@ -22,8 +22,6 @@ class ClusterSettings(BaseSettings):
 
     name: str = Field(default="homelab")
     talos_version: str = Field(default="v1.12.2")
-    # TODO: This could be removed if we just get the image from the image factory
-    talos_schematic_id: str = Field(default="3abf06e1d81e509d779dc256f9feae6cd6d82c69337c661cbfc383a92594faf5")
     storage_pool: str = Field(default="local-lvm")
     network_bridge: str = Field(default="vmbr0")
     vip_hostname: str = Field(default="", alias="CLUSTER_VIP_HOSTNAME")
