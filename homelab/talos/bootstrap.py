@@ -5,6 +5,7 @@ from config.settings import cluster_settings
 from config.nodes import NodeSpec, CONTROL_PLANE_NODES, WORKER_NODES
 from talos.secrets import machine_secrets
 from talos.config import generate_machine_configuration
+from infrastructure.reachability import create_reachability_check
 
 
 def extract_vm_ip(ipv4_addresses: list[list[str]]) -> str:
@@ -45,6 +46,9 @@ def apply_configuration_to_node(
     after the VM boots. The VM's ipv4_addresses output is populated by the
     QEMU guest agent once the VM is running.
 
+    This function first checks that the node is reachable via ping before
+    attempting to apply configuration.
+
     Args:
         node: Node specification
         vm: The Proxmox VM resource
@@ -56,10 +60,19 @@ def apply_configuration_to_node(
     # Generate machine configuration for this node
     config = generate_machine_configuration(node)
 
-    # Get the first IPv4 address from the VM's guest agent
+    # Get the primary IPv4 address from the VM's guest agent
     # This is populated after the VM boots and the guest agent reports IPs
-    node_ip = vm.ipv4_addresses.apply(
-        lambda addrs: addrs[1][0] if addrs and len(addrs) > 1 and addrs[1] else addrs[0][0] if addrs and addrs[0] else ""
+    node_ip = vm.ipv4_addresses.apply(extract_vm_ip)
+
+    # Wait for the node to be reachable before applying configuration
+    reachability_check = create_reachability_check(
+        f"reachability-{node.name}",
+        host=node_ip,
+        timeout=5,  # 5 seconds - VMs should respond immediately
+        interval=1,
+        opts=pulumi.ResourceOptions(
+            depends_on=depends_on + [vm],
+        ),
     )
 
     return talos.machine.ConfigurationApply(
@@ -77,7 +90,7 @@ def apply_configuration_to_node(
             "update": "15m",
         },
         opts=pulumi.ResourceOptions(
-            depends_on=depends_on + [vm],
+            depends_on=[reachability_check],
         ),
     )
 
@@ -130,9 +143,7 @@ def bootstrap_cluster(
     first_vm = control_plane_vms[0]
 
     # Get the first control plane's IP for bootstrap
-    first_node_ip = first_vm.ipv4_addresses.apply(
-        lambda addrs: addrs[1][0] if addrs and len(addrs) > 1 and addrs[1] else addrs[0][0] if addrs and addrs[0] else ""
-    )
+    first_node_ip = first_vm.ipv4_addresses.apply(extract_vm_ip)
 
     bootstrap = talos.machine.Bootstrap(
         "talos-bootstrap",
@@ -168,9 +179,7 @@ def get_kubeconfig(
         Kubeconfig resource
     """
     # Get the first control plane's IP
-    node_ip = first_vm.ipv4_addresses.apply(
-        lambda addrs: addrs[1][0] if addrs and len(addrs) > 1 and addrs[1] else addrs[0][0] if addrs and addrs[0] else ""
-    )
+    node_ip = first_vm.ipv4_addresses.apply(extract_vm_ip)
 
     kubeconfig = talos.cluster.Kubeconfig(
         "talos-kubeconfig",

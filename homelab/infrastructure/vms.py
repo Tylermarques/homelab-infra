@@ -89,6 +89,11 @@ def create_talos_vm(spec: NodeSpec) -> proxmoxve.vm.VirtualMachine:
         opts=pulumi.ResourceOptions(
             provider=proxmox_provider,
             depends_on=[talos_iso],
+            # Ignore changes to cdrom, boot_orders, and disks after initial creation.
+            # - cdrom/boot_orders: Once Talos is installed, the ISO is no longer needed
+            # - disks: Proxmox adds extra fields (aio, backup, cache, pathInDatastore, etc.)
+            #   that cause spurious diffs. We only care about initial disk creation.
+            ignore_changes=["cdrom", "boot_orders", "disks"],
         ),
     )
 

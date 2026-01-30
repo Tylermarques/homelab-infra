@@ -35,7 +35,7 @@ from infrastructure.vms import create_all_vms
 
 # Import Talos components
 from talos.secrets import machine_secrets
-from talos.bootstrap import bootstrap_cluster, get_kubeconfig, get_talosconfig
+from talos.bootstrap import bootstrap_cluster, get_kubeconfig, get_talosconfig, extract_vm_ip
 
 # Import configuration
 from config.nodes import CONTROL_PLANE_NODES, WORKER_NODES
@@ -66,15 +66,11 @@ def main() -> None:
 
     # Export VM IPs (useful for debugging)
     pulumi.export("control_plane_ips", [
-        vm.ipv4_addresses.apply(
-            lambda addrs: addrs[1][0] if addrs and len(addrs) > 1 and addrs[1] else addrs[0][0] if addrs and addrs[0] else "pending"
-        )
+        vm.ipv4_addresses.apply(lambda addrs: extract_vm_ip(addrs) or "pending")
         for vm in control_plane_vms
     ])
     pulumi.export("worker_ips", [
-        vm.ipv4_addresses.apply(
-            lambda addrs: addrs[1][0] if addrs and len(addrs) > 1 and addrs[1] else addrs[0][0] if addrs and addrs[0] else "pending"
-        )
+        vm.ipv4_addresses.apply(lambda addrs: extract_vm_ip(addrs) or "pending")
         for vm in worker_vms
     ])
 
