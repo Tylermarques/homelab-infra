@@ -1,0 +1,19 @@
+# Registers the Seerr GHCR OCI registry as a Helm repository in ArgoCD.
+#
+# REQUIRED PREREQUISITE for seerr-app.yaml. ArgoCD will not treat a repoURL as
+# an OCI registry unless a Repository secret with enableOCI=true exists for it;
+# without this, the Application fails to resolve the chart.
+#
+# The registry is public, so no credentials are needed.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: seerr-helm-oci
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+stringData:
+  name: seerr-helm-oci
+  type: helm
+  url: ghcr.io/seerr-team/seerr
+  enableOCI: "true"

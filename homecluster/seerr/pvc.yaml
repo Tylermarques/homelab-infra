@@ -1,0 +1,35 @@
+# Config volume for Seerr (settings.json + the SQLite database).
+#
+# WHY local-path AND NOT NFS:
+# Seerr runs SQLite with WAL enabled unconditionally (server/datasource.ts sets
+# enableWAL: true). WAL requires an mmap'd shared-memory segment (-shm), which
+# NFS cannot provide. The previous Overseerr deployment mounted its config from
+# a raw inline NFS volume, and the result was silent, ongoing breakage:
+#
+#   db.sqlite3      last written  2025-04-12
+#   db.sqlite3-wal  4.1 MB, still being appended  2026-07-29
+#
+# i.e. over a year of writes never checkpointed into the main database. The
+# volume MUST be block-backed. local-path gives us that: the directory lives on
+# the k3s node's virtual disk, which is itself backed by the ZFS array on the
+# Proxmox host.
+#
+# TRADE-OFF: local-path is node-local and WaitForFirstConsumer, so this volume
+# pins the Seerr pod to whichever node first mounts it. That is acceptable for a
+# single-replica stateful app, but it means node loss = restore from backup.
+#
+# DELIBERATELY NOT ARGOCD-MANAGED: this claim holds the only live copy of the
+# migrated request history. Keeping it outside the Application means a bad sync
+# or `prune: true` can never delete it. Apply it by hand, once.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: seerr-config
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

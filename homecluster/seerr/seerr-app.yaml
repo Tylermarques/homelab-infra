@@ -1,0 +1,150 @@
+# Seerr — media request manager. Replaces the previous Overseerr deployment
+# (see homecluster/overseerr/, retired once this is verified).
+#
+# Seerr is the merged successor to Overseerr and Jellyseerr. It migrates an
+# existing Overseerr config automatically on first start, so the seerr-config
+# PVC is seeded from the old Overseerr config before this Application is applied.
+#
+# Requires homecluster/seerr/argocd-repository.yaml (OCI repo registration)
+# and homecluster/seerr/pvc.yaml (pre-seeded config volume).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: seerr
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    # `default` namespace is deliberate: it keeps the star-local-tylermarques-prod-tls
+    # cert in-namespace, and lets Seerr keep reaching sonarr/radarr by their bare
+    # service names, exactly as the Overseerr config already does.
+    namespace: default
+  source:
+    repoURL: ghcr.io/seerr-team/seerr
+    chart: seerr-chart
+    targetRevision: 3.9.0
+    helm:
+      releaseName: seerr
+      values: |
+        # Without this the chart names everything "seerr-seerr-chart".
+        fullnameOverride: seerr
+
+        # The chart defaults this to `true` and renders it only when it is a bool
+        # (`if kindIs "bool" .Values.hostUsers`). `hostUsers` is the user-namespace
+        # field, and this cluster's API server does not persist it, so a rendered
+        # `true` becomes a permanent desired-vs-live difference and ArgoCD never
+        # reaches Synced. Setting it to null makes the chart omit the field
+        # entirely, which fixes the drift at the source instead of masking it.
+        # `true` is the Kubernetes default anyway, so behaviour is unchanged.
+        hostUsers: null
+
+        image:
+          registry: ghcr.io
+          repository: seerr-team/seerr
+          # Pinned to an immutable digest. The old Overseerr deployment used
+          # `sctx/overseerr:latest`, which with the default pullPolicy of Always
+          # for :latest silently upgraded the app to 1.35.0 on an unrelated
+          # restart and is the most likely cause of its lost Plex auth token.
+          # Never float this tag.
+          tag: v3.4.0
+          sha: d206d9e4056bb90178297df58047791196e7721e6dc19384579b0530702fe086
+          pullPolicy: IfNotPresent
+
+        config:
+          persistence:
+            # Pre-created and seeded by hand; see pvc.yaml for why it is not
+            # managed by this Application.
+            existingClaim: seerr-config
+
+        # A plain Ingress, not a Traefik IngressRoute. networking.k8s.io/v1 is a
+        # stable core API, so this is unaffected by the traefik.containo.us ->
+        # traefik.io CRD group migration and will survive the pending Traefik
+        # v2 -> v3 upgrade untouched.
+        #
+        # Verified on this cluster: IngressClass/traefik exists with controller
+        # traefik.io/ingress-controller, Traefik runs with
+        # --providers.kubernetesingress, and six existing plain Ingresses in
+        # `default` (including sonarr and radarr) are actively served.
+        #
+        # websecure only, so plain http:// returns 404 by design.
+        ingress:
+          enabled: true
+          ingressClassName: traefik
+          annotations:
+            traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          hosts:
+            - host: seerr.local.tylermarques.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: star-local-tylermarques-prod-tls
+              hosts:
+                - seerr.local.tylermarques.com
+
+        # Overseerr ran with no requests or limits, landing it in BestEffort QoS
+        # and making it the first thing evicted under node pressure — which is
+        # the likely explanation for its 8 restarts.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+
+        probes:
+          # Seerr runs the Overseerr -> Seerr schema migration on first boot.
+          # A startupProbe holds the liveness probe off until that finishes, so
+          # a slow migration cannot get the container killed mid-write.
+          startupProbe:
+            httpGet:
+              path: /api/v1/settings/public
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+
+        extraEnv:
+          - name: TZ
+            value: America/Toronto
+          - name: LOG_LEVEL
+            value: info
+
+        # The seerr-config PVC uses local-path, which is node-local. Its
+        # PersistentVolume therefore carries a hard nodeAffinity to whichever
+        # node first mounted the claim, and the pod can only ever run there.
+        #
+        # Pinning it explicitly rather than letting the scheduler decide: the
+        # claim initially bound to k3s-control-2, a control-plane/etcd node that
+        # had been rebuilt an hour earlier, which is a bad home for the only live
+        # copy of the request history. k3s-worker-5 is a long-lived worker with
+        # the most headroom (64Gi disk, 32Gi RAM, 8 CPU).
+        #
+        # This MUST match the node the PV is bound to, or the pod will not
+        # schedule. If you ever need to move it: back up, delete the PVC, then
+        # re-seed on the new node and update this selector.
+        nodeSelector:
+          kubernetes.io/hostname: k3s-worker-5
+  # The chart renders `subPath: {{ .Values.config.persistence.subPath }}`, and with
+  # that value unset it emits a literal `subPath: null`. The Kubernetes API drops
+  # the null rather than storing it, so ArgoCD forever sees a difference between
+  # desired (null) and live (absent). Combined with selfHeal that produced an
+  # endless resync loop, which also masks genuine drift by keeping the app
+  # permanently OutOfSync.
+  #
+  # Ignoring the single field is the correct fix. Setting a real subPath instead
+  # would relocate the mount and break the seeded data, which sits at the volume
+  # root.
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: seerr
+      jsonPointers:
+        - /spec/template/spec/containers/0/volumeMounts/0/subPath
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
