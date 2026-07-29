@@ -165,7 +165,10 @@ TM_DOMAINS = {
     "plex": {"proxied": False, "content": home_ip},
     "immich": {"proxied": False, "content": home_ip},
     "tylermarques.com": {"proxied": True, "content": home_ip},
-    "overseerr": {"proxied": True, "content": home_ip},
+    # overseerr removed: replaced by Seerr, which is reachable only at
+    # seerr.local.tylermarques.com via the *.local wildcard below. No public
+    # record is needed, and dropping this one removes a media request manager
+    # from the public internet.
     "mealie": {"proxied": True, "content": rackspace_ip},
     "ntfy": {"proxied": True, "content": home_ip},
     "sftp": {"proxied": True, "content": home_ip},

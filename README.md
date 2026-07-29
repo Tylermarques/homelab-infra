@@ -36,7 +36,9 @@ whitelist the domain in the router's rebind-protection settings.
 - [] immich
 - [] loki
 - [] paperless-ngx
-- [] overseer
+- [x] overseerr — replaced by Seerr (homecluster/seerr/), deployed via the
+      official OCI Helm chart driven by ArgoCD. Reachable only internally at
+      seerr.local.tylermarques.com; the public overseerr record was dropped.
 - [] immich
 - [] mealie
 - [] ntfy
