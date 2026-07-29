@@ -1,0 +1,18 @@
+# Wildcard cert for *.local.tylermarques.com, used by IngressRoutes for
+# services that are only reachable from the home LAN / tailnet.
+# Issued via DNS-01 (Cloudflare), so it works even though these hostnames
+# resolve to private IPs. Traefik reads tls.secretName from the IngressRoute's
+# own namespace, so this lives in `default` alongside those routes.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: star-local-tylermarques-com
+  namespace: default
+spec:
+  secretName: star-local-tylermarques-prod-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.local.tylermarques.com"
+  dnsNames:
+    - "*.local.tylermarques.com"
