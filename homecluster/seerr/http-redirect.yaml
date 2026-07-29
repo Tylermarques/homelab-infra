@@ -1,0 +1,59 @@
+# Redirects http://seerr.local.tylermarques.com -> https://
+#
+# The Helm chart renders exactly one Ingress, and it is bound to the `websecure`
+# entrypoint with TLS. That left plain http returning a bare 404. A second,
+# web-only Ingress plus a redirectScheme middleware fixes it.
+#
+# WHY NOT the chart's single Ingress with both entrypoints:
+# a middleware attached to an Ingress applies to every entrypoint that Ingress is
+# bound to. redirectScheme has no "already correct scheme" check, so on
+# `websecure` it would redirect https -> https forever. Two separate Ingress
+# objects is the only way to scope the redirect to http alone.
+#
+# WHY NOT a global entrypoint redirect (ports.web.redirections in the Traefik
+# HelmChartConfig): that would rewrite behaviour for every HTTP service on the
+# cluster. dashy is bound to `web` only and has no websecure route, so a global
+# redirect would send it to a 404.
+#
+# Uses traefik.io, which is the only surviving Traefik API group after the v3
+# upgrade.
+#
+# NOTE: hand-applied, like pvc.yaml. The ArgoCD Application is a single Helm
+# source and cannot also pull manifests from git without being converted to a
+# multi-source Application, which additionally requires these files to be pushed
+# to GitHub, since ArgoCD reads the remote and not this working copy.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: seerr-https-redirect
+  namespace: default
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: seerr-http-redirect
+  namespace: default
+  annotations:
+    # web only. Binding this to websecure as well would create a redirect loop.
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    # Reference format is <namespace>-<name>@<provider>.
+    traefik.ingress.kubernetes.io/router.middlewares: default-seerr-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: seerr.local.tylermarques.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              # Never actually reached: the middleware returns a 308 before the
+              # request is proxied. A backend is required by the Ingress schema.
+              service:
+                name: seerr
+                port:
+                  number: 80
