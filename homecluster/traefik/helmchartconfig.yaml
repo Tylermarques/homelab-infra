@@ -1,0 +1,50 @@
+# Overrides for the Traefik chart that k3s bundles and reconciles itself.
+#
+# Moved here from rackspace/apps/traefik/. helm.cattle.io/v1 HelmChartConfig in
+# kube-system is a k3s helm-controller construct, so it only ever applied to the
+# homecluster; the Rackspace cluster installs Traefik from the upstream chart into
+# its own namespace via ArgoCD.
+#
+# Editing this file changes the effective values of the bundled chart, which makes
+# k3s recreate helm-install-traefik. That is what actually triggers an upgrade.
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      mqtt:
+        port: 1883
+        protocol: TCP
+        # Chart 28+ changed ports.<name>.expose from a bool to a map. The old
+        # `expose: true` made the service template fail with "can't index item
+        # of type bool", which is why helm-install-traefik failed on every one of
+        # its 1000 retries between 2025-03-31 and this change, pinning the
+        # cluster to Traefik 2.11.8 while k3s wanted 3.3.2.
+        expose:
+          default: true
+        exposedPort: 1883
+
+    # NOTE: core.defaultRuleSyntax was deliberately NOT left set here.
+    #
+    # It was used only as a temporary bridge across the v2 -> v3 upgrade so that
+    # the one remaining v2-syntax rule (argocd-server's gRPC route, which used
+    # Headers()) kept working. That rule has since been migrated to Header(), and
+    # the flag had to be removed for it to parse: defaultRuleSyntax=v2 forces
+    # *every* rule through the v2 parser, which rejects Header() with
+    # "unsupported function". The two are mutually exclusive.
+    #
+    # All 52 routers were audited against Traefik's own /api/http/routers before
+    # removing it, and no other rule used v2-only syntax. Do not reintroduce it
+    # without re-auditing.
+
+    ingressRoute:
+      dashboard:
+        # Chart 25 defaulted this to true and chart 34 defaults it to false, so
+        # without this the upgrade would silently delete the existing dashboard
+        # route. The chart's default matchRule and entryPoints already match the
+        # live object. The `traefik` entrypoint is not exposed through the
+        # LoadBalancer, so the dashboard stays internal-only.
+        enabled: true

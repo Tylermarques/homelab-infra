@@ -14,7 +14,10 @@ spec:
         - name: argocd-server
           port: 80
     - kind: Rule
-      match: Host(`argocd.local.tylermarques.com`) && Headers(`Content-Type`, `application/grpc`)
+      # Traefik v3 renamed the Headers() matcher to Header(). Both clusters now
+      # run Traefik v3 (homecluster 3.3.2, rackspace 3.3.4), so v3 syntax is
+      # correct for both. This was the only v2-only rule in the repository.
+      match: Host(`argocd.local.tylermarques.com`) && Header(`Content-Type`, `application/grpc`)
       priority: 11
       services:
         - name: argocd-server
