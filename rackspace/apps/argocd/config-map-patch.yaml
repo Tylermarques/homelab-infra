@@ -1,4 +1,25 @@
 ---
+# server.insecure makes argocd-server serve plaintext HTTP instead of TLS, which
+# is the correct mode when it sits behind a TLS-terminating ingress.
+#
+# This file already existed but had never been applied, and the consequence was
+# that the ArgoCD web UI was unusable. argocd-server defaults to serving TLS on
+# 8080, while ingress.yaml sends plain HTTP to port 80. argocd-server answered
+# every request with a 307 to https://argocd.local.tylermarques.com/, which came
+# straight back to Traefik and was forwarded as plain HTTP again - an infinite
+# redirect loop. The gRPC route failed differently: scheme h2c is cleartext
+# HTTP/2, which a TLS listener cannot speak, so it returned 502.
+#
+# With this applied, the web UI returns 200 with zero redirects and gRPC reaches
+# the backend.
+#
+# NOTE: namespace is set explicitly. Without it, applying this file outside the
+# argocd namespace silently creates an unused ConfigMap in `default`.
+#
+# NOTE: this is a partial patch, not the full ConfigMap. The live object also
+# carries notificationscontroller.log.* keys that are managed elsewhere, so apply
+# additively (kubectl patch --type merge) rather than letting a plain apply prune
+# them.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,5 +27,6 @@ metadata:
     app.kubernetes.io/name: argocd-cmd-params-cm
     app.kubernetes.io/part-of: argocd
   name: argocd-cmd-params-cm
+  namespace: argocd
 data:
   server.insecure: "true"
