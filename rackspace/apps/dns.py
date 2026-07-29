@@ -21,6 +21,9 @@ uthebomb_zone = cloudflare.get_zone(name="u-the-bomb.com")
 # TODO: This can be changed from an env value to a lookup of the 'traefik' svc in the 'traefik' namespace
 rackspace_ip = env_config["RACKSPACE_IP"]
 home_ip = env_config["HOME_IP"]
+# LAN IP of the home cluster's Traefik ingress. Published publicly but only
+# reachable from the home LAN or the tailnet (via the homelab subnet router).
+home_lan_ingress_ip = env_config.get("HOME_LAN_INGRESS_IP")
 
 # Middleware that limits traffic to only coming from the tailnet.
 tailnet_allow_middleware = CustomResource(
@@ -168,6 +171,20 @@ TM_DOMAINS = {
     "sftp": {"proxied": True, "content": home_ip},
     "terraria": {"proxied": False, "content": rackspace_ip},
 }
+
+# Wildcard for *.local.tylermarques.com. Must stay unproxied: Cloudflare cannot
+# proxy to a private IP. Clients outside the LAN/tailnet resolve it but get an
+# unroutable address, which is the intended access control at the DNS layer.
+if home_lan_ingress_ip:
+    _ = cloudflare.Record(
+        "TM_local_wildcard",
+        zone_id=tylermarques_zone.id,
+        name="*.local",
+        content=home_lan_ingress_ip,
+        type="A",
+        proxied=False,
+        allow_overwrite=True,
+    )
 
 BOMB_DOMAINS = {
     "u-the-bomb.com": {"proxied": True, "content": rackspace_ip},

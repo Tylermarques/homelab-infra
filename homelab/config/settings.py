@@ -25,6 +25,7 @@ class ClusterSettings(BaseSettings):
     storage_pool: str = Field(default="local-lvm")
     network_bridge: str = Field(default="vmbr0")
     vip_hostname: str = Field(default="", alias="CLUSTER_VIP_HOSTNAME")
+    lan_subnet: str = Field(default="192.168.0.0/23", alias="HOME_LAN_SUBNET")
 
     class Config:
         env_file = ".env"
