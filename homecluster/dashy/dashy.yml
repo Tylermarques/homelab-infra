@@ -26,7 +26,15 @@ spec:
           - name: BASE_URL
             value: dashy.tylermarques.com
         ports:
-        - containerPort: 80
+        # Dashy serves on 8080, not 80. This was declared as 80, and because the
+        # Service uses targetPort: http it resolved to a port nothing listened on,
+        # so dashy.tylermarques.com returned a bare 502 from Traefik. Verified
+        # from inside the cluster: pod:8080 -> 200, pod:80 -> connection refused.
+        #
+        # The image tag is unpinned, so a re-pull picked up a dashy release that
+        # moved the default port and broke this silently - the same failure mode
+        # as overseerr's sctx/overseerr:latest. Worth pinning.
+        - containerPort: 8080
           name: http
         volumeMounts:
         - mountPath: /app/public/
