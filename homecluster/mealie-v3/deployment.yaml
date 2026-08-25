@@ -31,6 +31,8 @@ spec:
           env:
             - name: ALLOW_SIGNUP
               value: "false"
+            - name: ALLOW_PASSWORD_LOGIN
+              value: "true"
             - name: BASE_URL
               value: https://mealie.local.tylermarques.com
             - name: DB_ENGINE
@@ -41,6 +43,33 @@ spec:
               value: "911"
             - name: TZ
               value: America/Toronto
+            - name: OIDC_AUTH_ENABLED
+              value: "true"
+            - name: OIDC_SIGNUP_ENABLED
+              value: "true"
+            - name: OIDC_AUTO_REDIRECT
+              value: "false"
+            - name: OIDC_PROVIDER_NAME
+              value: Authelia
+            - name: OIDC_ADMIN_GROUP
+              value: admins
+            - name: OIDC_USER_GROUP
+              value: users
+            - name: OIDC_CONFIGURATION_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc
+                  key: configuration-url
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc
+                  key: client-id
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-oidc
+                  key: client-secret
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:

@@ -31,6 +31,24 @@ kubectl --context k3s-homelab get secret authelia-bootstrap-credentials \
 The bootstrap script refuses to overwrite `authelia-secrets` because rotating
 the storage encryption key makes stored TOTP and WebAuthn credentials unusable.
 
+## Mealie OIDC
+
+Create the separate Authelia and Mealie OIDC secrets before applying the
+updated applications:
+
+```sh
+homecluster/authelia/bootstrap-oidc-secrets.sh
+```
+
+The script is idempotent. It does not modify `authelia-secrets`, and it refuses
+to replace an existing OIDC secret or rotate a client credential. Authelia
+stores only the client-secret digest. Mealie stores the matching plaintext in
+its namespace. Neither value is stored in Git.
+
+Mealie uses its native OIDC support. Do not add the Authelia ForwardAuth
+middleware to the Mealie ingress because that would cause two authentication
+flows. The Mealie login form remains available as a fallback.
+
 ## Protecting services
 
 For a Traefik `IngressRoute`, add this middleware:

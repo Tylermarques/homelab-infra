@@ -58,6 +58,8 @@ spec:
 
         secret:
           existingSecret: authelia-secrets
+          additionalSecrets:
+            authelia-oidc: {}
 
         configMap:
           theme: auto
@@ -127,6 +129,40 @@ spec:
             filesystem:
               enabled: true
               filename: /config/notification.txt
+          identity_providers:
+            oidc:
+              enabled: true
+              hmac_secret:
+                secret_name: authelia-oidc
+                path: hmac.key
+              jwks:
+                - algorithm: RS256
+                  use: sig
+                  key:
+                    path: /secrets/authelia-oidc/jwks-rs256.pem
+              clients:
+                - client_id: mealie
+                  client_name: Mealie
+                  client_secret:
+                    path: /secrets/authelia-oidc/mealie-client-secret-digest.txt
+                  public: false
+                  authorization_policy: one_factor
+                  require_pkce: true
+                  pkce_challenge_method: S256
+                  redirect_uris:
+                    - https://mealie.local.tylermarques.com/login
+                  scopes:
+                    - openid
+                    - profile
+                    - email
+                    - groups
+                  response_types:
+                    - code
+                  grant_types:
+                    - authorization_code
+                  access_token_signed_response_alg: none
+                  userinfo_signed_response_alg: none
+                  token_endpoint_auth_method: client_secret_basic
 
         ingress:
           enabled: true
