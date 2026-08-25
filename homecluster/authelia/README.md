@@ -49,6 +49,19 @@ Mealie uses its native OIDC support. Do not add the Authelia ForwardAuth
 middleware to the Mealie ingress because that would cause two authentication
 flows. The Mealie login form remains available as a fallback.
 
+## User management
+
+Authelia is not a user directory and has no admin user-management UI for the
+current file authentication backend. The `authelia-users` Secret contains the
+complete user database, so do not replace it with a single-user file when you
+add or update an account. Generate password hashes without printing passwords,
+merge the change into the full database, and retain a backup before applying
+the Secret.
+
+Use LLDAP as the preferred future authentication backend if administrators
+need a web UI for users, groups, and password changes. Authelia can then use
+LDAP for authentication while it continues to provide OIDC and ForwardAuth.
+
 ## Protecting services
 
 For a Traefik `IngressRoute`, add this middleware:
