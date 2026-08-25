@@ -14,6 +14,10 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |-
+    providers:
+      kubernetesCRD:
+        allowExternalNameServices: true
+
     ports:
       mqtt:
         port: 1883
