@@ -66,11 +66,11 @@ spec:
           nginx.ingress.kubernetes.io/configuration-snippet: |
             auth_request_set $required_groups 'casa_editors';
         hosts:
-          - host: mealie.tylermarques.com
+          - host: mealie.local.tylermarques.com
             paths:
               - path: /
                 # Ignored if not kubeVersion >= 1.14-0
                 pathType: Prefix
         tls:
           - hosts:
-              - mealie.tylermarques.com
+              - mealie.local.tylermarques.com

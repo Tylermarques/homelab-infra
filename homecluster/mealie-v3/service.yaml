@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mealie-v3
+  namespace: mealie
+  labels:
+    app.kubernetes.io/name: mealie
+    app.kubernetes.io/instance: mealie-v3
+spec:
+  selector:
+    app.kubernetes.io/name: mealie
+    app.kubernetes.io/instance: mealie-v3
+  ports:
+    - name: http
+      port: 9000
+      targetPort: http
+      protocol: TCP

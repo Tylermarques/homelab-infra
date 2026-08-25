@@ -9,7 +9,7 @@ metadata:
     io.kompose.service: mealie-frontend
   name: mealie-frontend
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       io.kompose.service: mealie-frontend
@@ -62,21 +62,3 @@ spec:
     io.kompose.service: mealie-frontend
 status:
   loadBalancer: {}
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: mealie-ingress
-  namespace: default
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - kind: Rule
-      match: Host(`mealie.tylermarques.com`)
-      priority: 10
-      services:
-        - name: mealie-frontend
-          port: 9925
-  tls:
-    secretName: star-tylermarques-prod-tls

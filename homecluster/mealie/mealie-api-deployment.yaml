@@ -29,7 +29,7 @@ metadata:
     io.kompose.service: mealie-api
   name: mealie-api
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       io.kompose.service: mealie-api
@@ -49,7 +49,7 @@ spec:
             - name: ALLOW_SIGNUP
               value: "true"
             - name: BASE_URL
-              value: https://mealie.tylermarques.com
+              value: https://mealie.local.tylermarques.com
             - name: MAX_WORKERS
               value: "1"
             - name: PGID

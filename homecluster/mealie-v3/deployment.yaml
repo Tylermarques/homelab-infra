@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mealie-v3
+  namespace: mealie
+  labels:
+    app.kubernetes.io/name: mealie
+    app.kubernetes.io/instance: mealie-v3
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mealie
+      app.kubernetes.io/instance: mealie-v3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mealie
+        app.kubernetes.io/instance: mealie-v3
+    spec:
+      containers:
+        - name: mealie
+          image: ghcr.io/mealie-recipes/mealie:v3.23.1@sha256:345ff24f92ef5f66e0521a2d0556603bd9ecd9533919b935b58209b3b1a0dcd9
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9000
+              protocol: TCP
+          env:
+            - name: ALLOW_SIGNUP
+              value: "false"
+            - name: BASE_URL
+              value: https://mealie.local.tylermarques.com
+            - name: DB_ENGINE
+              value: postgres
+            - name: PGID
+              value: "911"
+            - name: PUID
+              value: "911"
+            - name: TZ
+              value: America/Toronto
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-db-app
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-db-app
+                  key: password
+            - name: POSTGRES_SERVER
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-db-app
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-db-app
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-db-app
+                  key: dbname
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /api/app/about
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet:
+              path: /api/app/about
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/app/about
+              port: http
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mealie-v3-data
