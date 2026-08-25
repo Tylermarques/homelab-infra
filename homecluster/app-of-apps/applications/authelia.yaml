@@ -1,0 +1,313 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: authelia
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: authelia
+  source:
+    repoURL: https://charts.authelia.com
+    chart: authelia
+    targetRevision: 0.11.6
+    helm:
+      releaseName: authelia
+      values: |
+        image:
+          tag: 4.39.20
+          pullPolicy: IfNotPresent
+
+        pod:
+          kind: Deployment
+          replicas: 1
+          strategy:
+            type: Recreate
+          selectors:
+            nodeSelector:
+              kubernetes.io/hostname: k3s-worker-1
+          env:
+            - name: TZ
+              value: America/Toronto
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          extraVolumes:
+            - name: users
+              secret:
+                secretName: authelia-users
+          extraVolumeMounts:
+            - name: users
+              mountPath: /config/users_database.yml
+              subPath: users_database.yml
+              readOnly: true
+
+        persistence:
+          enabled: true
+          storageClass: local-path
+          accessModes:
+            - ReadWriteOnce
+          size: 1Gi
+
+        secret:
+          existingSecret: authelia-secrets
+
+        configMap:
+          theme: auto
+          log:
+            level: info
+            format: text
+          totp:
+            issuer: local.tylermarques.com
+          authentication_backend:
+            password_reset:
+              disable: true
+            password_change:
+              disable: true
+            file:
+              enabled: true
+              path: /config/users_database.yml
+              watch: false
+              search:
+                email: true
+                case_insensitive: true
+              password:
+                algorithm: argon2
+                argon2:
+                  variant: argon2id
+                  iterations: 3
+                  memory: 65536
+                  parallelism: 4
+                  key_length: 32
+                  salt_length: 16
+          access_control:
+            default_policy: deny
+            rules:
+              - domain: auth.local.tylermarques.com
+                policy: bypass
+              - domain: "*.local.tylermarques.com"
+                policy: one_factor
+          session:
+            name: authelia_session
+            same_site: lax
+            expiration: 1 hour
+            inactivity: 15 minutes
+            remember_me: 1 month
+            cookies:
+              - subdomain: auth
+                domain: local.tylermarques.com
+                default_redirection_url: https://mealie.local.tylermarques.com
+            redis:
+              enabled: true
+              host: authelia-redis.authelia.svc.cluster.local
+              port: 6379
+          regulation:
+            modes:
+              - user
+              - ip
+            max_retries: 5
+            find_time: 2 minutes
+            ban_time: 5 minutes
+          storage:
+            postgres:
+              enabled: true
+              address: tcp://authelia-db-rw.authelia.svc.cluster.local:5432
+              database: authelia
+              username: authelia
+              timeout: 5 seconds
+          notifier:
+            disable_startup_check: false
+            filesystem:
+              enabled: true
+              filename: /config/notification.txt
+
+        ingress:
+          enabled: true
+          className: traefik
+          annotations:
+            traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          tls:
+            enabled: true
+            secret: authelia-local-tls
+          traefikCRD:
+            enabled: true
+            disableIngressRoute: true
+            entryPoints:
+              - websecure
+            middlewares:
+              auth:
+                nameOverride: authelia-forwardauth
+                authResponseHeaders:
+                  - Remote-User
+                  - Remote-Name
+                  - Remote-Email
+                  - Remote-Groups
+
+        extraObjects:
+          - apiVersion: postgresql.cnpg.io/v1
+            kind: Cluster
+            metadata:
+              name: authelia-db
+              namespace: authelia
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+            spec:
+              instances: 1
+              imageName: ghcr.io/cloudnative-pg/postgresql:17.11-202608170816-standard-trixie@sha256:91e0de662d53895a45f1396f4ee1a75daeb0c26fc87853afc9c8f43e01fdaa21
+              affinity:
+                nodeSelector:
+                  kubernetes.io/hostname: k3s-worker-1
+              bootstrap:
+                initdb:
+                  dataChecksums: true
+                  database: authelia
+                  owner: authelia
+                  secret:
+                    name: authelia-db-credentials
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              storage:
+                size: 10Gi
+                storageClass: local-path
+          - apiVersion: v1
+            kind: Service
+            metadata:
+              name: authelia-redis
+              namespace: authelia
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+            spec:
+              selector:
+                app.kubernetes.io/name: authelia-redis
+              ports:
+                - name: redis
+                  port: 6379
+                  targetPort: redis
+          - apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: authelia-redis
+              namespace: authelia
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: authelia-redis
+              template:
+                metadata:
+                  labels:
+                    app.kubernetes.io/name: authelia-redis
+                spec:
+                  nodeSelector:
+                    kubernetes.io/hostname: k3s-worker-1
+                  containers:
+                    - name: redis
+                      image: docker.io/library/redis:7.4-alpine@sha256:1db42ccef14898aa29bae778452d567534b59c107129cbc1163fb552de184d3c
+                      imagePullPolicy: IfNotPresent
+                      args:
+                        - --save
+                        - ""
+                        - --appendonly
+                        - "no"
+                        - --requirepass
+                        - $(REDIS_PASSWORD)
+                      env:
+                        - name: REDIS_PASSWORD
+                          valueFrom:
+                            secretKeyRef:
+                              name: authelia-secrets
+                              key: session.redis.password.txt
+                      ports:
+                        - name: redis
+                          containerPort: 6379
+                      readinessProbe:
+                        exec:
+                          command:
+                            - sh
+                            - -c
+                            - redis-cli -a "$REDIS_PASSWORD" ping
+                        periodSeconds: 5
+                      livenessProbe:
+                        exec:
+                          command:
+                            - sh
+                            - -c
+                            - redis-cli -a "$REDIS_PASSWORD" ping
+                        periodSeconds: 30
+                      resources:
+                        requests:
+                          cpu: 25m
+                          memory: 32Mi
+                        limits:
+                          cpu: 200m
+                          memory: 128Mi
+          - apiVersion: cert-manager.io/v1
+            kind: Certificate
+            metadata:
+              name: authelia-local
+              namespace: authelia
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+            spec:
+              secretName: authelia-local-tls
+              issuerRef:
+                name: letsencrypt-prod
+                kind: ClusterIssuer
+              dnsNames:
+                - auth.local.tylermarques.com
+          - apiVersion: traefik.io/v1alpha1
+            kind: Middleware
+            metadata:
+              name: authelia-https-redirect
+              namespace: authelia
+            spec:
+              redirectScheme:
+                scheme: https
+                permanent: true
+          - apiVersion: networking.k8s.io/v1
+            kind: Ingress
+            metadata:
+              name: authelia-http-redirect
+              namespace: authelia
+              annotations:
+                traefik.ingress.kubernetes.io/router.entrypoints: web
+                traefik.ingress.kubernetes.io/router.middlewares: authelia-authelia-https-redirect@kubernetescrd
+            spec:
+              ingressClassName: traefik
+              rules:
+                - host: auth.local.tylermarques.com
+                  http:
+                    paths:
+                      - path: /
+                        pathType: Prefix
+                        backend:
+                          service:
+                            name: authelia
+                            port:
+                              number: 80
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
