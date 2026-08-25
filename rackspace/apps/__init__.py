@@ -10,5 +10,5 @@ from .nfs_csi_driver import *
 from .monitoring import *
 from .nfs import *
 from .cloudnative_pg import *
-from .mealie import *
+# Mealie runs only on the home cluster.
 # from .authelia import *

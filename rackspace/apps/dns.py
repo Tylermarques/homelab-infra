@@ -169,7 +169,6 @@ TM_DOMAINS = {
     # seerr.local.tylermarques.com via the *.local wildcard below. No public
     # record is needed, and dropping this one removes a media request manager
     # from the public internet.
-    "mealie": {"proxied": True, "content": rackspace_ip},
     "ntfy": {"proxied": True, "content": home_ip},
     "sftp": {"proxied": True, "content": home_ip},
     "terraria": {"proxied": False, "content": rackspace_ip},
