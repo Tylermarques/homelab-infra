@@ -163,6 +163,25 @@ spec:
                   access_token_signed_response_alg: none
                   userinfo_signed_response_alg: none
                   token_endpoint_auth_method: client_secret_basic
+                - client_id: homeassistant
+                  client_name: Home Assistant
+                  public: true
+                  authorization_policy: one_factor
+                  require_pkce: true
+                  pkce_challenge_method: S256
+                  redirect_uris:
+                    - https://hass.local.tylermarques.com/auth/oidc/callback
+                  scopes:
+                    - openid
+                    - profile
+                    - email
+                    - groups
+                  response_types:
+                    - code
+                  grant_types:
+                    - authorization_code
+                  access_token_signed_response_alg: none
+                  userinfo_signed_response_alg: none
 
         ingress:
           enabled: true

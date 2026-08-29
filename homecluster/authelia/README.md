@@ -49,6 +49,19 @@ Mealie uses its native OIDC support. Do not add the Authelia ForwardAuth
 middleware to the Mealie ingress because that would cause two authentication
 flows. The Mealie login form remains available as a fallback.
 
+## Home Assistant OIDC
+
+Home Assistant uses the `hass-oidc-auth` HACS integration and a public PKCE
+client. No client secret is required. Its callback is:
+
+```text
+https://hass.local.tylermarques.com/auth/oidc/callback
+```
+
+The integration maps the Authelia `admins` group to Home Assistant
+administrators and `users` to regular users. Keep Home Assistant's local login
+available as a recovery path.
+
 ## User management
 
 Authelia is not a user directory and has no admin user-management UI for the

@@ -1,0 +1,168 @@
+title: Home
+views:
+  - title: Home
+    path: default_view
+    icon: mdi:home-variant-outline
+    type: sections
+    max_columns: 3
+    dense_section_placement: false
+    header:
+      layout: responsive
+      badges_position: bottom
+      card:
+        type: markdown
+        content: |
+          # Home
+          **{{ now().strftime('%A, %B %-d') }}** · {{ states('weather.forecast_home') | replace('_', ' ') | title }}
+    sections:
+      - type: grid
+        background:
+          color: blue
+          opacity: 12
+        cards:
+          - type: heading
+            heading: At a glance
+            icon: mdi:view-dashboard-outline
+          - type: custom:mushroom-chips-card
+            alignment: start
+            chips:
+              - type: entity
+                entity: person.tyler
+                content_info: state
+                use_entity_picture: true
+              - type: weather
+                entity: weather.forecast_home
+                show_temperature: true
+                show_conditions: true
+              - type: entity
+                entity: sensor.office_temperature
+                content_info: state
+                icon_color: orange
+              - type: entity
+                entity: sensor.office_humidity
+                content_info: state
+                icon_color: light-blue
+              - type: entity
+                entity: sensor.tyler_iphone_battery_level
+                content_info: state
+                icon_color: green
+            grid_options:
+              columns: 12
+              rows: auto
+          - type: weather-forecast
+            entity: weather.forecast_home
+            forecast_type: daily
+            show_current: true
+            show_forecast: true
+            grid_options:
+              columns: 12
+              rows: 4
+
+      - type: grid
+        background:
+          color: amber
+          opacity: 10
+        cards:
+          - type: heading
+            heading: Lights
+            icon: mdi:lightbulb-group-outline
+          - type: tile
+            entity: light.front_hall
+            name: Front hall
+            color: amber
+            features:
+              - type: light-brightness
+            features_position: bottom
+          - type: tile
+            entity: light.desk
+            name: Desk
+            color: amber
+            features:
+              - type: light-brightness
+            features_position: bottom
+          - type: tile
+            entity: light.bedroom
+            name: Bedroom
+            color: amber
+            features:
+              - type: light-brightness
+            features_position: bottom
+
+      - type: grid
+        background:
+          color: cyan
+          opacity: 10
+        cards:
+          - type: heading
+            heading: Office comfort
+            icon: mdi:thermostat
+          - type: thermostat
+            entity: climate.office_2
+            name: Office
+            grid_options:
+              columns: 12
+              rows: 4
+          - type: tile
+            entity: sensor.office_temperature
+            name: Temperature
+            color: orange
+          - type: tile
+            entity: sensor.office_humidity
+            name: Humidity
+            color: light-blue
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Media
+            icon: mdi:play-circle-outline
+          - type: media-control
+            entity: media_player.all_speakers
+            name: Whole home audio
+            grid_options:
+              columns: 12
+              rows: 3
+          - type: tile
+            entity: media_player.living_room_tv_2_2
+            name: Living room TV
+            color: purple
+          - type: tile
+            entity: media_player.kitchen_display
+            name: Kitchen display
+            color: purple
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: Devices
+            icon: mdi:battery-heart-variant
+          - type: tile
+            entity: sensor.tyler_iphone_battery_level
+            name: iPhone
+            color: green
+          - type: tile
+            entity: sensor.ipad_pro_battery_level
+            name: iPad Pro
+            color: green
+          - type: tile
+            entity: sensor.tyler_iphone_watch_battery_level
+            name: Watch
+            color: green
+
+      - type: grid
+        cards:
+          - type: heading
+            heading: More
+            icon: mdi:dots-grid
+          - type: button
+            name: Rack status
+            icon: mdi:server-network
+            tap_action:
+              action: navigate
+              navigation_path: /rack-info
+          - type: button
+            name: Map
+            icon: mdi:map-outline
+            tap_action:
+              action: navigate
+              navigation_path: /map
