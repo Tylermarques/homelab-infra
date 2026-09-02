@@ -83,6 +83,7 @@ metadata:
     gethomepage.dev/group: Productivity
     gethomepage.dev/icon: paperless-ngx.png
     gethomepage.dev/href: https://paperless.local.tylermarques.com
+    gethomepage.dev/pod-selector: app=paperless-ngx
 spec:
   entryPoints:
     - websecure

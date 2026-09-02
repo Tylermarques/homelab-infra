@@ -60,6 +60,7 @@ metadata:
     gethomepage.dev/group: Home
     gethomepage.dev/icon: home-assistant.png
     gethomepage.dev/href: https://hass.local.tylermarques.com
+    gethomepage.dev/external: "true"
 spec:
   entryPoints:
     - websecure

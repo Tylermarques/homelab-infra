@@ -24,6 +24,7 @@ metadata:
     gethomepage.dev/group: Media
     gethomepage.dev/icon: plex.png
     gethomepage.dev/href: https://plex.local.tylermarques.com
+    gethomepage.dev/external: "true"
 spec:
   entryPoints:
     - websecure

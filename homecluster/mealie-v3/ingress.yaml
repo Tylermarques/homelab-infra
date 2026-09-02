@@ -8,6 +8,7 @@ metadata:
     gethomepage.dev/name: Mealie
     gethomepage.dev/group: Productivity
     gethomepage.dev/icon: mealie.png
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=mealie
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
 spec:
   ingressClassName: traefik

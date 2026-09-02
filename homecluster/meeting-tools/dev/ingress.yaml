@@ -9,6 +9,7 @@ metadata:
     gethomepage.dev/group: Development
     gethomepage.dev/icon: mdi-microphone
     gethomepage.dev/href: https://meeting-tools.marquescg.com/dev
+    gethomepage.dev/pod-selector: app=frontend-dev
 spec:
   entryPoints:
     - websecure

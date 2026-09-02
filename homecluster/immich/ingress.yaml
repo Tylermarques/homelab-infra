@@ -8,6 +8,7 @@ metadata:
     gethomepage.dev/group: Media
     gethomepage.dev/icon: immich.png
     gethomepage.dev/href: https://immich.tylermarques.com
+    gethomepage.dev/pod-selector: app.kubernetes.io/instance=immich,app.kubernetes.io/name=server
   # Explicit: the Certificate below already pins namespace: immich, but this
   # route did not. Applied without an explicit `-n immich` it would silently
   # land in `default` and never match, so pin it here.
