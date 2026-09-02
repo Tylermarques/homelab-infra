@@ -30,6 +30,25 @@ spec:
           ports:
             - containerPort: 8000
               name: http
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
           env:
             # Required since upstream image change; created out-of-band:
             #   kubectl create secret generic paperless-secret-key -n default \
