@@ -51,7 +51,7 @@ flows. The Mealie login form remains available as a fallback.
 
 ## Home Assistant OIDC
 
-Home Assistant uses the `hass-oidc-auth` HACS integration and a public PKCE
+Home Assistant uses the `hass-oidc-auth` custom integration and a public PKCE
 client. No client secret is required. Its callback is:
 
 ```text
@@ -61,6 +61,13 @@ https://hass.local.tylermarques.com/auth/oidc/callback
 The integration maps the Authelia `admins` group to Home Assistant
 administrators and `users` to regular users. Keep Home Assistant's local login
 available as a recovery path.
+
+## Immich OIDC
+
+Immich uses a confidential native OIDC client. Generate and validate its
+credential with `homecluster/immich/bootstrap-oidc.sh` before deploying the
+Authelia Application. The client keeps password login available and does not
+automatically register new Immich accounts.
 
 ## User management
 

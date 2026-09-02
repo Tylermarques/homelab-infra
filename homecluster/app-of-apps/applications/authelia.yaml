@@ -183,6 +183,29 @@ spec:
                     - authorization_code
                   access_token_signed_response_alg: none
                   userinfo_signed_response_alg: none
+                - client_id: immich
+                  client_name: Immich
+                  client_secret:
+                    path: /secrets/authelia-oidc/immich-client-secret-digest.txt
+                  public: false
+                  authorization_policy: one_factor
+                  require_pkce: false
+                  pkce_challenge_method: ""
+                  redirect_uris:
+                    - https://immich.local.tylermarques.com/auth/login
+                    - https://immich.local.tylermarques.com/user-settings
+                    - app.immich:///oauth-callback
+                  scopes:
+                    - openid
+                    - profile
+                    - email
+                  response_types:
+                    - code
+                  grant_types:
+                    - authorization_code
+                  access_token_signed_response_alg: none
+                  userinfo_signed_response_alg: none
+                  token_endpoint_auth_method: client_secret_post
                 - client_id: paperless
                   client_name: Paperless-ngx
                   client_secret:

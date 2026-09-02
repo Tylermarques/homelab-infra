@@ -163,7 +163,9 @@ def create_cloudflare_A_record(subdomain: str, domain: ALLOWED_DOMAINS, ip=racks
 TM_DOMAINS = {
     "hass": {"proxied": False, "content": home_ip},
     "plex": {"proxied": False, "content": home_ip},
-    "immich": {"proxied": False, "content": home_ip},
+    # Private-only: LAN clients route directly and tailnet clients use the home
+    # subnet router. Keeping the existing hostname avoids reconfiguring apps.
+    "immich": {"proxied": False, "content": home_lan_ingress_ip},
     "tylermarques.com": {"proxied": True, "content": home_ip},
     # overseerr removed: replaced by Seerr, which is reachable only at
     # seerr.local.tylermarques.com via the *.local wildcard below. No public

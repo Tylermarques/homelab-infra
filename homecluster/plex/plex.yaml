@@ -1,17 +1,34 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: plex-egress
+  name: plex
   namespace: default
-  annotations:
-    tailscale.com/tailnet-fqdn: archlinux.taildff07.ts.net
 spec:
-  type: ExternalName
-  externalName: unused
   ports:
     - name: http
       port: 32400
       protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: plex
+  namespace: default
+subsets:
+  - addresses:
+      - ip: 192.168.1.89
+    ports:
+      - name: http
+        port: 32400
+        protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: plex
+  namespace: default
+spec:
+  serverName: plex.cd7ff9087f3548f7bc2060dd779a7f78.plex.direct
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
@@ -32,7 +49,9 @@ spec:
     - kind: Rule
       match: Host(`plex.local.tylermarques.com`)
       services:
-        - name: plex-egress
+        - name: plex
           port: 32400
+          scheme: https
+          serversTransport: plex
   tls:
     secretName: star-local-tylermarques-prod-tls

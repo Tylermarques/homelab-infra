@@ -1,7 +1,15 @@
 env:
   DB_HOSTNAME: "immich-cluster-rw"
-  DB_USERNAME: "immich"
-  DB_PASSWORD: "zybvvoI4?b0lbpqJ4thk?Eq4Ei!JCrZHrmLbCf8f"
+  DB_USERNAME:
+    valueFrom:
+      secretKeyRef:
+        name: immich-postgres-userpass
+        key: username
+  DB_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: immich-postgres-userpass
+        key: password
 
 immich:
   persistence:

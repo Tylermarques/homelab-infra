@@ -42,7 +42,8 @@ remain separate.
 
 ## Authelia OIDC
 
-Home Assistant uses `hass-oidc-auth` 1.2.1 with Authelia's public PKCE client:
+Home Assistant uses the verified `hass-oidc-auth` 1.2.1 release with Authelia's
+public PKCE client:
 
 ```yaml
 auth_oidc:

@@ -7,7 +7,7 @@ metadata:
     gethomepage.dev/name: Immich
     gethomepage.dev/group: Media
     gethomepage.dev/icon: immich.png
-    gethomepage.dev/href: https://immich.tylermarques.com
+    gethomepage.dev/href: https://immich.local.tylermarques.com
     gethomepage.dev/pod-selector: app.kubernetes.io/instance=immich,app.kubernetes.io/name=server
   # Explicit: the Certificate below already pins namespace: immich, but this
   # route did not. Applied without an explicit `-n immich` it would silently
@@ -40,3 +40,66 @@ spec:
   commonName: "immich.tylermarques.com"
   dnsNames:
     - "immich.tylermarques.com"
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: immich-local-tylermarques-com
+  namespace: immich
+spec:
+  secretName: immich-local-tylermarques-prod-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "immich.local.tylermarques.com"
+  dnsNames:
+    - "immich.local.tylermarques.com"
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: immich-local
+  namespace: immich
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`immich.local.tylermarques.com`)
+      priority: 10
+      services:
+        - name: immich-server
+          port: 2283
+  tls:
+    secretName: immich-local-tylermarques-prod-tls
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: immich-https-redirect
+  namespace: immich
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: immich-local-http
+  namespace: immich
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`immich.local.tylermarques.com`)
+      middlewares:
+        - name: immich-https-redirect
+      services:
+        - name: immich-server
+          port: 2283
