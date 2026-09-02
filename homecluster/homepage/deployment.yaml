@@ -84,6 +84,10 @@ spec:
               subPath: kubernetes.yaml
               readOnly: true
             - name: config
+              mountPath: /app/config/proxmox.yaml
+              subPath: proxmox.yaml
+              readOnly: true
+            - name: config
               mountPath: /app/config/services.yaml
               subPath: services.yaml
               readOnly: true
