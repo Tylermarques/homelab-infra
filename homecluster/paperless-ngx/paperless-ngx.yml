@@ -53,6 +53,21 @@ spec:
               value: redis://:Jm3I1hOGca@redis-master
             - name: PAPERLESS_URL
               value: https://paperless.local.tylermarques.com
+            - name: PAPERLESS_APPS
+              value: allauth.socialaccount.providers.openid_connect
+            - name: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+              valueFrom:
+                secretKeyRef:
+                  name: paperless-oidc
+                  key: providers-json
+            - name: PAPERLESS_SOCIAL_AUTO_SIGNUP
+              value: "true"
+            - name: PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS
+              value: "true"
+            - name: PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS
+              value: "true"
+            - name: PAPERLESS_ACCOUNT_DEFAULT_HTTP_PROTOCOL
+              value: https
             - name: PAPERLESS_ADMIN_USER
               value: tyler
             - name: PAPERLESS_ADMIN_PASSWORD
