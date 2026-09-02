@@ -18,6 +18,12 @@ kind: IngressRoute
 metadata:
   name: plex-ingress
   namespace: default
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Plex
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: plex.png
+    gethomepage.dev/href: https://plex.local.tylermarques.com
 spec:
   entryPoints:
     - websecure

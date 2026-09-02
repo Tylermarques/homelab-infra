@@ -3,6 +3,12 @@ kind: IngressRoute
 metadata:
   name: meeting-tools
   namespace: default
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Meeting Tools
+    gethomepage.dev/group: Tools
+    gethomepage.dev/icon: mdi-microphone
+    gethomepage.dev/href: https://meeting-tools.marquescg.com
 spec:
   entryPoints:
     - websecure

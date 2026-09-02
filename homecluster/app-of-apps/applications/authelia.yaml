@@ -187,6 +187,10 @@ spec:
           enabled: true
           className: traefik
           annotations:
+            gethomepage.dev/enabled: "true"
+            gethomepage.dev/name: Authelia
+            gethomepage.dev/group: Security
+            gethomepage.dev/icon: authelia.png
             traefik.ingress.kubernetes.io/router.entrypoints: websecure
           tls:
             enabled: true

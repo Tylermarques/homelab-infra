@@ -2,6 +2,12 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: immich
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Immich
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: immich.png
+    gethomepage.dev/href: https://immich.tylermarques.com
   # Explicit: the Certificate below already pins namespace: immich, but this
   # route did not. Applied without an explicit `-n immich` it would silently
   # land in `default` and never match, so pin it here.

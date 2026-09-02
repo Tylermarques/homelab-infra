@@ -54,6 +54,12 @@ kind: IngressRoute
 metadata:
   name: home-assistant
   namespace: default
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Home Assistant
+    gethomepage.dev/group: Home
+    gethomepage.dev/icon: home-assistant.png
+    gethomepage.dev/href: https://hass.local.tylermarques.com
 spec:
   entryPoints:
     - websecure

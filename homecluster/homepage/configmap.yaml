@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage
+  namespace: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+data:
+  kubernetes.yaml: |
+    mode: cluster
+    ingress: true
+    traefik: true
+  settings.yaml: |
+    title: Homelab
+    theme: dark
+    color: slate
+    headerStyle: clean
+    target: _blank
+  services.yaml: "[]"
+  bookmarks.yaml: "[]"
+  widgets.yaml: |
+    - search:
+        provider: duckduckgo
+        target: _blank
+  docker.yaml: ""
+  custom.css: ""
+  custom.js: ""

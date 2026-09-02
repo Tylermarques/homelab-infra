@@ -3,6 +3,12 @@ kind: IngressRoute
 metadata:
   name: freshrss
   namespace: default
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: FreshRSS
+    gethomepage.dev/group: Productivity
+    gethomepage.dev/icon: freshrss.png
+    gethomepage.dev/href: https://freshrss.tylermarques.com
 spec:
   entryPoints:
     - websecure
