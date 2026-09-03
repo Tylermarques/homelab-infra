@@ -1,22 +1,44 @@
-env:
-  DB_HOSTNAME: "immich-cluster-rw"
-  DB_USERNAME:
-    valueFrom:
-      secretKeyRef:
-        name: immich-postgres-userpass
-        key: username
-  DB_PASSWORD:
-    valueFrom:
-      secretKeyRef:
-        name: immich-postgres-userpass
-        key: password
+controllers:
+  main:
+    containers:
+      main:
+        image:
+          tag: v3.1.0
+        env:
+          DB_HOSTNAME: immich-db-rw
+          DB_DATABASE_NAME: immich
+          DB_USERNAME:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-userpass
+                key: username
+          DB_PASSWORD:
+            valueFrom:
+              secretKeyRef:
+                name: immich-postgres-userpass
+                key: password
 
 immich:
   persistence:
     library:
-      existingClaim: immich-cluster-1
+      existingClaim: immich-library
 
-redis:
+valkey:
   enabled: true
-  auth:
-    enabled: false
+  persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      size: 1Gi
+      accessMode: ReadWriteOnce
+      storageClass: local-path
+
+server:
+  enabled: true
+
+machine-learning:
+  enabled: true
+  persistence:
+    cache:
+      enabled: true
+      type: emptyDir

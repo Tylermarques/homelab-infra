@@ -37,8 +37,48 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
   name: immich-database
+  namespace: immich
 spec:
   name: immich
   owner: immich
   cluster:
     name: immich-cluster
+---
+# Replacement database on local storage. Keep immich-cluster and its retained
+# NFS volume until the complete v3 migration and restore test are finished.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-db
+  namespace: immich
+spec:
+  instances: 1
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:15.18-1.1.1@sha256:67a74169bf31009e0cb7ed42dbea5ed30f0a5207ce934466cce24967acc4ba25
+  affinity:
+    nodeSelector:
+      kubernetes.io/hostname: k3s-worker-4
+  storage:
+    size: 10Gi
+    storageClass: immich-db-local-retain
+  managed:
+    roles:
+      - name: immich
+        createdb: true
+        login: true
+        superuser: true
+        passwordSecret:
+          name: immich-postgres-userpass
+  postgresql:
+    shared_preload_libraries:
+      - "vchord.so"
+  bootstrap:
+    initdb:
+      database: immich
+      owner: immich
+      secret:
+        name: immich-postgres-userpass
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS "vchord" CASCADE;
+        - CREATE EXTENSION IF NOT EXISTS "cube";
+        - CREATE EXTENSION IF NOT EXISTS "earthdistance";
+        - ALTER SYSTEM SET search_path TO "$user", public;
