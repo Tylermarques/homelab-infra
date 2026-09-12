@@ -1,0 +1,36 @@
+# Media automation stack (Sonarr, Radarr, Lidarr, Prowlarr, SABnzbd) in the
+# `default` namespace. See homecluster/mediaserver/README.md.
+#
+# The Application is deliberately named `k8s-mediaserver`, the name of the Helm
+# release that created these objects in 2023. ArgoCD tracks resources by the
+# `app.kubernetes.io/instance` label, and every live object already carries
+# `app.kubernetes.io/instance: k8s-mediaserver`, so this name makes ArgoCD adopt
+# the running Deployments, Services, ConfigMaps and Ingresses in place instead
+# of fighting over the label. It also means the Jackett objects, which carry
+# the same label but are no longer in the manifests, are pruned on first sync.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-mediaserver
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  source:
+    repoURL: https://github.com/Tylermarques/homelab-infra.git
+    targetRevision: main
+    path: homecluster/mediaserver
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

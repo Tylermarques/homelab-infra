@@ -1,0 +1,153 @@
+# Radarr: rendered from the k8s-mediaserver Helm release (chart 0.7.0) that
+# originally created these objects, so ArgoCD adopts them without a diff.
+# See README.md for the Homepage annotations and the widget API key Secret.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-radarr-cm
+  namespace: default
+data:
+  config.xml: |
+    <Config>
+      <UrlBase>/radarr</UrlBase>
+    </Config>
+  init-radarr.sh: |
+    #!/bin/bash
+    echo "### Initializing config ###"
+    if [ ! -f /radarr-config/config.xml ]; then
+      cp -n /init-radarr/config.xml /radarr-config/config.xml
+      echo "### No configuration found, intialized with default settings ###"
+    fi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: radarr-config
+  namespace: default
+data:
+  PGID: '1000'
+  PUID: '1000'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8s-mediaserver
+    app.kubernetes.io/instance: k8s-mediaserver
+spec:
+  type: ClusterIP
+  ports:
+  - port: 7878
+    targetPort: 7878
+    protocol: TCP
+    name: radarr-port
+  selector:
+    app: radarr
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8s-mediaserver
+    app.kubernetes.io/instance: k8s-mediaserver
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: k8s-mediaserver
+      app.kubernetes.io/instance: k8s-mediaserver
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: k8s-mediaserver
+        app.kubernetes.io/instance: k8s-mediaserver
+        app: radarr
+    spec:
+      initContainers:
+      - name: config-radarr
+        image: docker.io/ubuntu:groovy
+        command:
+        - /init-radarr/init-radarr.sh
+        volumeMounts:
+        - mountPath: /init-radarr
+          name: init-files-radarr
+        - name: mediaserver-volume
+          mountPath: /radarr-config
+          subPath: config/radarr
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+      containers:
+      - name: k8s-mediaserver
+        envFrom:
+        - configMapRef:
+            name: radarr-config
+        image: docker.io/linuxserver/radarr:latest
+        imagePullPolicy: Always
+        readinessProbe:
+          tcpSocket:
+            port: 7878
+          initialDelaySeconds: 10
+          periodSeconds: 20
+        ports:
+        - name: radarr-port
+          containerPort: 7878
+          protocol: TCP
+        volumeMounts:
+        - name: mediaserver-volume
+          mountPath: /config
+          subPath: config/radarr
+        - name: mediaserver-volume
+          mountPath: /downloads
+          subPath: library/downloads
+        - name: mediaserver-volume
+          mountPath: /movies
+          subPath: library/movies
+      volumes:
+      - name: mediaserver-volume
+        nfs:
+          path: /main/plex
+          server: 192.168.0.71
+      - name: init-files-radarr
+        configMap:
+          defaultMode: 493
+          name: init-radarr-cm
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: radarr
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8s-mediaserver
+    app.kubernetes.io/instance: k8s-mediaserver
+  annotations:
+    gethomepage.dev/enabled: 'true'
+    gethomepage.dev/name: Radarr
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: radarr.png
+    gethomepage.dev/href: https://media.local.tylermarques.com/radarr
+    gethomepage.dev/pod-selector: app=radarr
+    gethomepage.dev/widget.type: radarr
+    gethomepage.dev/widget.url: http://radarr.default.svc.cluster.local:7878/radarr
+    gethomepage.dev/widget.key: '{{HOMEPAGE_VAR_RADARR_KEY}}'
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: media.local.tylermarques.com
+    http:
+      paths:
+      - path: /radarr
+        pathType: Prefix
+        backend:
+          service:
+            name: radarr
+            port:
+              number: 7878
