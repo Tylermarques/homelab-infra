@@ -34,7 +34,7 @@ spec:
           - path: /
             pathType: Prefix
             backend:
-              # Never reached: the middleware answers with a 308 before proxying.
+              # Never reached: the middleware answers with a 301 before proxying.
               # The Ingress schema requires a backend, so point at any app.
               service:
                 name: sonarr

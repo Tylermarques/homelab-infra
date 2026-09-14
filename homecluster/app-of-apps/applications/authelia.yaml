@@ -105,10 +105,14 @@ spec:
               # API paths bypass Authelia so API-key clients (mobile apps on the
               # tailnet, RSS feeds) keep working. The apps still require the API
               # key on these paths; without one they answer 401 themselves.
+              #
+              # Authelia matches `resources` against path AND query string, so
+              # the patterns must accept `?...` directly after the prefix
+              # (SABnzbd's API is `/sabnzbd/api?mode=...`).
               - domain: media.local.tylermarques.com
                 resources:
-                  - "^/(sonarr|radarr|lidarr|prowlarr)/(api|feed)(/.*)?$"
-                  - "^/sabnzbd/api(/.*)?$"
+                  - "^/(sonarr|radarr|lidarr|prowlarr)/(api|feed)([/?].*)?$"
+                  - "^/sabnzbd/api([/?].*)?$"
                 policy: bypass
               # Web UI: admins only. Other Authelia users (Plex, Immich, Home
               # Assistant users) are denied even though they can log in to the
