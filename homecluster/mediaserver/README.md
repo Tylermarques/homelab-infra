@@ -69,10 +69,27 @@ referenced as `{{HOMEPAGE_VAR_<APP>_KEY}}` and come from the
 `homepage-widget-keys` Secret in the `homepage` namespace; see the Homepage
 README for how to create it.
 
+## Authentication
+
+Every app Ingress is bound to `websecure` with the wildcard
+`star-local-tylermarques-prod-tls` certificate and carries the Authelia
+ForwardAuth middleware. `http-redirect.yaml` sends plain http to https.
+
+Access is decided in the Authelia Application's `access_control` rules for
+`media.local.tylermarques.com`: members of the `admins` group get in with one
+factor, every other Authelia user is denied, and the API paths
+(`/<app>/api`, `/<app>/feed`, `/sabnzbd/api`) bypass Authelia so API-key
+clients keep working. None of these apps support OIDC, so this is the only
+single-sign-on option they have.
+
+Because Authelia is the gate, each *arr app runs with **Authentication
+Method: External** (Settings > General > Security) and SABnzbd runs with its
+web login disabled (`html_login = 0`). The API key is still required on API
+paths in every app regardless of that setting. Never set External on an app
+that is reachable by a route without the middleware.
+
 ## Known debts
 
 - Images float on `latest` (`develop` for Prowlarr) with `imagePullPolicy:
   Always`, so any pod restart can upgrade an app.
 - The init containers use `docker.io/ubuntu:groovy`, an EOL release.
-- Radarr and Prowlarr have no authentication on the UI. Sonarr and Lidarr use
-  forms login; SABnzbd uses its own login.

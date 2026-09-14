@@ -1,0 +1,42 @@
+# Redirects http://media.local.tylermarques.com/* -> https://
+#
+# The app Ingresses are bound to `websecure` only, because the Authelia session
+# cookie is Secure and a ForwardAuth round trip over plain http would loop.
+# Without this second Ingress, plain http would return a bare 404.
+#
+# Same shape as homecluster/seerr/http-redirect.yaml, and for the same reason
+# a separate web-only Ingress is used: a redirectScheme middleware attached to
+# the app Ingresses would apply on websecure too and redirect https forever.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: media-https-redirect
+  namespace: default
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: media-http-redirect
+  namespace: default
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-media-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: media.local.tylermarques.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              # Never reached: the middleware answers with a 308 before proxying.
+              # The Ingress schema requires a backend, so point at any app.
+              service:
+                name: sonarr
+                port:
+                  number: 8989

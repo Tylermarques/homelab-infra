@@ -92,9 +92,34 @@ spec:
                   salt_length: 16
           access_control:
             default_policy: deny
+            # First matching rule wins, so specific hosts go above the wildcard.
             rules:
               - domain: auth.local.tylermarques.com
                 policy: bypass
+
+              # Media stack (homecluster/mediaserver): Sonarr, Radarr, Lidarr,
+              # Prowlarr and SABnzbd share this host under path prefixes and run
+              # with their own login disabled (External auth), so Authelia is the
+              # only gate on the web UI.
+              #
+              # API paths bypass Authelia so API-key clients (mobile apps on the
+              # tailnet, RSS feeds) keep working. The apps still require the API
+              # key on these paths; without one they answer 401 themselves.
+              - domain: media.local.tylermarques.com
+                resources:
+                  - "^/(sonarr|radarr|lidarr|prowlarr)/(api|feed)(/.*)?$"
+                  - "^/sabnzbd/api(/.*)?$"
+                policy: bypass
+              # Web UI: admins only. Other Authelia users (Plex, Immich, Home
+              # Assistant users) are denied even though they can log in to the
+              # portal, because the explicit deny below stops the wildcard rule
+              # from applying to this host.
+              - domain: media.local.tylermarques.com
+                subject: "group:admins"
+                policy: one_factor
+              - domain: media.local.tylermarques.com
+                policy: deny
+
               - domain: "*.local.tylermarques.com"
                 policy: one_factor
           session:

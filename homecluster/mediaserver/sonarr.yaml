@@ -138,8 +138,18 @@ metadata:
     gethomepage.dev/widget.type: sonarr
     gethomepage.dev/widget.url: http://sonarr.default.svc.cluster.local:8989/sonarr
     gethomepage.dev/widget.key: '{{HOMEPAGE_VAR_SONARR_KEY}}'
+    # HTTPS only; http://media.local... is redirected by http-redirect.yaml.
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    # Authelia ForwardAuth. Who may pass is decided by the access_control rules
+    # for media.local.tylermarques.com in the Authelia Application (admins only,
+    # API paths bypassed). The app itself runs with External authentication.
+    traefik.ingress.kubernetes.io/router.middlewares: authelia-authelia-forwardauth@kubernetescrd
 spec:
   ingressClassName: traefik
+  tls:
+  - secretName: star-local-tylermarques-prod-tls
+    hosts:
+    - media.local.tylermarques.com
   rules:
   - host: media.local.tylermarques.com
     http:

@@ -98,9 +98,14 @@ For a standard `Ingress`, add this annotation:
 traefik.ingress.kubernetes.io/router.middlewares: authelia-authelia-forwardauth@kubernetescrd
 ```
 
-The initial access policy is one-factor authentication for
-`*.local.tylermarques.com`. Enroll TOTP or WebAuthn before changing protected
-applications to a two-factor policy.
+The default access policy is one-factor authentication for any user on
+`*.local.tylermarques.com`. Hosts that need a narrower audience get their own
+rules above the wildcard in `access_control.rules`; Authelia applies the first
+matching rule, so a host-specific `deny` after a `subject: "group:admins"`
+rule keeps the wildcard from letting other users through. The media stack
+(`media.local.tylermarques.com`) is the first example: admins only, with API
+paths bypassed for API-key clients. Enroll TOTP or WebAuthn before changing
+any rule to a two-factor policy.
 
 ## Storage
 

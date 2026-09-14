@@ -9,3 +9,4 @@ resources:
   - lidarr.yaml
   - prowlarr.yaml
   - sabnzbd.yaml
+  - http-redirect.yaml
