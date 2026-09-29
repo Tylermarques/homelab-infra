@@ -112,6 +112,45 @@ views:
             color: light-blue
 
       - type: grid
+        background:
+          color: orange
+          opacity: 10
+        cards:
+          - type: heading
+            heading: Heating
+            icon: mdi:radiator
+          - type: tile
+            entity: climate.living_room_thermostat
+            name: Living room
+            color: orange
+            state_content:
+              - state
+              - current_temperature
+            features_position: bottom
+            features:
+              - type: target-temperature
+          - type: tile
+            entity: climate.upstairs_hallway_thermostat
+            name: Upstairs hallway
+            color: orange
+            state_content:
+              - state
+              - current_temperature
+            features_position: bottom
+            features:
+              - type: target-temperature
+          - type: tile
+            entity: climate.downstairs_hallway_thermostat
+            name: Downstairs hallway
+            color: orange
+            state_content:
+              - state
+              - current_temperature
+            features_position: bottom
+            features:
+              - type: target-temperature
+
+      - type: grid
         cards:
           - type: heading
             heading: Media

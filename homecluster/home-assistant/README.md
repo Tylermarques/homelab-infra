@@ -40,6 +40,21 @@ storage-mode **Home Control** dashboard. It uses the native responsive Sections
 layout and the existing Mushroom installation. The Rack Info and Map dashboards
 remain separate.
 
+The **Heating** section holds the three Mysa baseboard thermostats, which reach
+Home Assistant through `homecluster/mysa2mqtt`.
+
+Applying a change to this file means writing it into
+`/mnt/data/supervisor/homeassistant/.storage/lovelace.home_control` on the HAOS
+VM as `{"version": 1, "minor_version": 1, "key": "lovelace.home_control",
+"data": {"config": <this yaml as json>}}`, then running `ha core restart`. The
+restart is required because storage-mode dashboard configs are cached in memory
+for the life of the process, with no reload service. Back the file up first.
+
+Transfer the file as base64 rather than echoing JSON through `qm guest exec`,
+which mangles multi-byte UTF-8 (the `·` in the header card is the canary).
+Editing the dashboard in the Home Assistant UI overwrites the same file, so pull
+it back into git afterwards to avoid drift.
+
 ## Authelia OIDC
 
 Home Assistant uses the verified `hass-oidc-auth` 1.2.1 release with Authelia's
