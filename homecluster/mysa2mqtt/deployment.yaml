@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysa2mqtt
+  namespace: mysa2mqtt
+  labels:
+    app.kubernetes.io/name: mysa2mqtt
+    app.kubernetes.io/instance: mysa2mqtt
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mysa2mqtt
+      app.kubernetes.io/instance: mysa2mqtt
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mysa2mqtt
+        app.kubernetes.io/instance: mysa2mqtt
+    spec:
+      containers:
+        - name: mysa2mqtt
+          image: bourquep/mysa2mqtt:3.2.6@sha256:195bca1fe79e9fd17986db22f248ca9a871048b69bcdc0f54d838e20a28adc43
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: M2M_MQTT_HOST
+              value: mosquitto.default.svc.cluster.local
+            - name: M2M_MQTT_PORT
+              value: "1883"
+            - name: M2M_MQTT_CLIENT_NAME
+              value: mysa2mqtt
+            # HA's unit_system_v2 is "metric", so setpoints must be published in
+            # Celsius. A mismatch here is silent: 21 C would be read as 21 F.
+            - name: M2M_TEMPERATURE_UNIT
+              value: C
+            # Account-wide REST poll. The AWS IoT real-time socket is the primary
+            # path; this is the fallback that keeps entities fresh when it drops,
+            # which it does on V2/Lite baseboards. 30s is the enforced minimum.
+            - name: M2M_POLL_INTERVAL_SECONDS
+              value: "60"
+            - name: M2M_LOG_LEVEL
+              value: info
+            # Touched on every successful Mysa cloud contact (throttled to one
+            # write per 10s), which is what the liveness probe reads.
+            - name: M2M_HEARTBEAT_FILE
+              value: /tmp/heartbeat
+            - name: M2M_MYSA_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mysa-account
+                  key: username
+            - name: M2M_MYSA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysa-account
+                  key: password
+          resources:
+            requests:
+              cpu: 25m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          # The process has no HTTP endpoint, so both probes read the heartbeat
+          # file's age. Startup tolerates 2m of Cognito login before the first
+          # heartbeat; liveness restarts the pod after 5m with no cloud contact.
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test -f /tmp/heartbeat
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test $(( $(date +%s) - $(stat -c %Y /tmp/heartbeat) )) -lt 300
+            periodSeconds: 60
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
