@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: slskd
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: slskd
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: slskd.png
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=slskd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: slskd.local.tylermarques.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: slskd
+                port:
+                  number: 5030
+  tls:
+    - secretName: star-local-tylermarques-prod-tls
+      hosts:
+        - slskd.local.tylermarques.com

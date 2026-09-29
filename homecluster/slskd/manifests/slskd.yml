@@ -1,0 +1,69 @@
+# Mounted read-only at /config/slskd.yml. slskd loads this file after its
+# environment variables, so anything set here wins. Credentials stay in the
+# slskd-credentials Secret and must not be added here.
+#
+# Unset options fall back to slskd's built-in defaults, which leave upload
+# speed and every per-user upload limit unlimited.
+shares:
+  filters:
+    - \.ini$
+    - Thumbs\.db$
+    - \.DS_Store$
+    - (^|/)\.
+transfers:
+  upload:
+    # Global caps, shared by every group. The speed limit is in KiB/s and can
+    # be changed without a restart. 2500 KiB/s is about 20 Mbit/s; the hard
+    # ceiling is 10% of the 3.5 Gbit/s uplink, about 42000 KiB/s.
+    slots: 10
+    speed_limit: 2500
+  groups:
+    # Everyone who shares something and has no Soulseek privileges.
+    default:
+      upload:
+        priority: 1
+        strategy: roundrobin
+        limits:
+          queued:
+            files: 150
+            megabytes: 1500
+          weekly:
+            files: 1500
+            megabytes: 15000
+            failures: 150
+    # Users who share nothing: served last, one slot, 100 KiB/s.
+    leechers:
+      thresholds:
+        files: 1
+        directories: 1
+      upload:
+        priority: 99
+        strategy: roundrobin
+        slots: 1
+        speed_limit: 100
+        limits:
+          queued:
+            files: 15
+            megabytes: 150
+          daily:
+            files: 30
+            megabytes: 300
+            failures: 10
+          weekly:
+            files: 150
+            megabytes: 1500
+            failures: 30
+retention:
+  # Minutes. Only removes records from the UI and database; files on disk are
+  # never deleted, since DroppedNeedle moves completed downloads itself.
+  search: 1440
+  transfers:
+    upload:
+      succeeded: 1440
+      failed: 180
+    download:
+      # A week, so DroppedNeedle can still see a finished download after an
+      # outage.
+      succeeded: 10080
+      errored: 20160
+      cancelled: 60

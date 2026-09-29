@@ -1,0 +1,43 @@
+# ArgoCD creates these resources but never prunes or deletes them, so removing
+# them from Git or deleting the Application cannot remove slskd's state.
+#
+# A PersistentVolume binds to exactly one claim, so slskd needs its own volume
+# for the NFS export that DroppedNeedle also mounts. slskd's application
+# directory lives on it too, so the pod can run on any node.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: slskd-media
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  capacity:
+    # NFS does not enforce this value. It is the claim's scheduling contract.
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  nfs:
+    server: 192.168.0.71
+    path: /main/plex/library
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: slskd-media
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: slskd-media
+  resources:
+    requests:
+      storage: 1Ti

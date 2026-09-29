@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slskd
+  labels:
+    app.kubernetes.io/name: slskd
+    app.kubernetes.io/instance: slskd
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: slskd
+      app.kubernetes.io/instance: slskd
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: slskd
+        app.kubernetes.io/instance: slskd
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      initContainers:
+        # Create /app as the app user so the entrypoint finds it already owned
+        # by 1000:1000. slskd also does not create the download directories
+        # when they are set explicitly. Both live on the same export as
+        # /data/music, so an import into the library is a rename.
+        - name: initialize-nfs-directories
+          image: busybox:1.37.0@sha256:9db7b59979c38555a39def84a31fb98b5296952f9e3afd4f6f11f05b07adfab0
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              mkdir -p /data/slskd/app
+              chmod 0700 /data/slskd/app
+              mkdir -p /data/downloads/slskd
+              mkdir -p /data/downloads/slskd-incomplete
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - name: media
+              mountPath: /data
+      containers:
+        - name: slskd
+          image: slskd/slskd:0.26.0@sha256:ecd4026d4f8fb504e2cc55323efa2c1f5b56d20d3686b018249cc36b48ea17a6
+          imagePullPolicy: IfNotPresent
+          # Soulseek and web credentials, the API key for DroppedNeedle, and the
+          # JWT signing key. Created by hand; see the README.
+          envFrom:
+            - secretRef:
+                name: slskd-credentials
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: America/Toronto
+            - name: SLSKD_CONFIG
+              value: /config/slskd.yml
+            # Traefik terminates TLS.
+            - name: SLSKD_NO_HTTPS
+              value: "true"
+            - name: SLSKD_DOWNLOADS_DIR
+              value: /data/downloads/slskd
+            - name: SLSKD_INCOMPLETE_DIR
+              value: /data/downloads/slskd-incomplete
+            - name: SLSKD_SHARED_DIR
+              value: /music
+          ports:
+            - name: http
+              containerPort: 5030
+              protocol: TCP
+            - name: soulseek
+              containerPort: 50300
+              protocol: TCP
+          # The first share scan of the music library can take a while.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 90
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                # tini runs as root and forwards SIGTERM to the app user.
+                - KILL
+                - SETGID
+                - SETUID
+          volumeMounts:
+            # Logs and SQLite databases (transfer history, which the upload
+            # limits are counted from, plus searches and messages).
+            - name: media
+              mountPath: /app
+              subPath: slskd/app
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: media
+              mountPath: /data
+            # Shared to the Soulseek network. Read-only so peers can never
+            # cause a write into the library.
+            - name: media
+              mountPath: /music
+              subPath: music
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: slskd-config
+        - name: media
+          persistentVolumeClaim:
+            claimName: slskd-media
