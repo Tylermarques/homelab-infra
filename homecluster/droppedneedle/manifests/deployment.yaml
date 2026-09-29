@@ -1,0 +1,151 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: droppedneedle
+  labels:
+    app.kubernetes.io/name: droppedneedle
+    app.kubernetes.io/instance: droppedneedle
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: droppedneedle
+      app.kubernetes.io/instance: droppedneedle
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: droppedneedle
+        app.kubernetes.io/instance: droppedneedle
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: k3s-worker-5
+      terminationGracePeriodSeconds: 60
+      initContainers:
+        - name: initialize-local-state
+          image: busybox:1.37.0@sha256:9db7b59979c38555a39def84a31fb98b5296952f9e3afd4f6f11f05b07adfab0
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              mkdir -p /state/config /state/cache
+              chown -R 1000:1000 /state
+              chmod 0700 /state/config /state/cache
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - DAC_OVERRIDE
+                - FOWNER
+            runAsNonRoot: false
+            runAsUser: 0
+          volumeMounts:
+            - name: state
+              mountPath: /state
+        - name: initialize-nfs-directories
+          image: busybox:1.37.0@sha256:9db7b59979c38555a39def84a31fb98b5296952f9e3afd4f6f11f05b07adfab0
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              mkdir -p /data/droppedneedle/backups
+              mkdir -p /data/droppedneedle/imports
+              mkdir -p /data/droppedneedle/plugins
+              mkdir -p /data/downloads/slskd
+              chmod 0700 /data/droppedneedle/backups
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - name: media
+              mountPath: /data
+      containers:
+        - name: droppedneedle
+          image: droppedneedle/droppedneedle:v2.3.0@sha256:2a64f2cad5e531efb4895df08aec08123e5aa7215658a1a57109bd66588941b6
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: PORT
+              value: "8688"
+            - name: TZ
+              value: America/Toronto
+            - name: SLSKD_DOWNLOADS_PATH
+              value: /data/downloads/slskd
+          ports:
+            - name: http
+              containerPort: 8688
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 120
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - SETGID
+                - SETUID
+          volumeMounts:
+            - name: state
+              mountPath: /app/config
+              subPath: config
+            - name: state
+              mountPath: /app/cache
+              subPath: cache
+            - name: media
+              mountPath: /app/plugins
+              subPath: droppedneedle/plugins
+            - name: media
+              mountPath: /app/imports
+              subPath: droppedneedle/imports
+            - name: media
+              mountPath: /data
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: droppedneedle-state
+        - name: media
+          persistentVolumeClaim:
+            claimName: droppedneedle-media

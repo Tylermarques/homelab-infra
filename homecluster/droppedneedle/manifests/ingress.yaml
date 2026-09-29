@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: droppedneedle
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: DroppedNeedle
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: mdi-record-circle
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: droppedneedle.local.tylermarques.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: droppedneedle
+                port:
+                  number: 8688
+  tls:
+    - secretName: star-local-tylermarques-prod-tls
+      hosts:
+        - droppedneedle.local.tylermarques.com

@@ -1,0 +1,57 @@
+# ArgoCD creates these resources but never prunes or deletes them, so removing
+# them from Git or deleting the Application cannot remove DroppedNeedle's state.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: droppedneedle-media
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  capacity:
+    # NFS does not enforce this value. It is the claim's scheduling contract.
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - hard
+    - nfsvers=4.1
+    - noatime
+  nfs:
+    server: 192.168.0.71
+    path: /main/plex/library
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: droppedneedle-media
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ""
+  volumeName: droppedneedle-media
+  resources:
+    requests:
+      storage: 1Ti
+---
+# DroppedNeedle forces SQLite WAL mode. Keep the live database on node-local
+# storage because this NFS service has already failed to checkpoint a WAL file.
+# A CronJob creates verified backups on the retained NFS volume each day.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: droppedneedle-state
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 10Gi

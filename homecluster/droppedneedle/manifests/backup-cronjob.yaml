@@ -1,0 +1,137 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: droppedneedle-backup
+  labels:
+    app.kubernetes.io/name: droppedneedle
+    app.kubernetes.io/instance: droppedneedle
+spec:
+  schedule: "17 3 * * *"
+  timeZone: America/Toronto
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 1800
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: droppedneedle
+            app.kubernetes.io/instance: droppedneedle
+            app.kubernetes.io/component: backup
+        spec:
+          automountServiceAccountToken: false
+          nodeSelector:
+            kubernetes.io/hostname: k3s-worker-5
+          restartPolicy: Never
+          containers:
+            - name: backup
+              image: droppedneedle/droppedneedle:v2.3.0@sha256:2a64f2cad5e531efb4895df08aec08123e5aa7215658a1a57109bd66588941b6
+              imagePullPolicy: IfNotPresent
+              command:
+                - python
+              args:
+                - -c
+                - |
+                  import json
+                  import shutil
+                  import sqlite3
+                  from datetime import UTC, datetime
+                  from pathlib import Path
+
+                  source_root = Path("/state")
+                  backup_root = Path("/data/droppedneedle/backups")
+                  plugins = Path("/data/droppedneedle/plugins")
+                  database = source_root / "cache" / "library.db"
+                  now = datetime.now(UTC)
+                  snapshot_name = now.strftime("%Y%m%dT%H%M%SZ")
+                  temporary = backup_root / f".{snapshot_name}.tmp"
+                  snapshot = backup_root / snapshot_name
+
+                  if not database.is_file():
+                      raise FileNotFoundError(f"database does not exist: {database}")
+
+                  backup_root.mkdir(parents=True, exist_ok=True)
+                  temporary.mkdir(mode=0o700)
+                  try:
+                      destination_db = temporary / "library.db"
+                      with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as source:
+                          with sqlite3.connect(destination_db) as destination:
+                              source.backup(destination)
+                              result = destination.execute("PRAGMA integrity_check").fetchone()[0]
+                      if result != "ok":
+                          raise RuntimeError(f"backup integrity check failed: {result}")
+
+                      config = source_root / "config"
+                      if config.is_dir():
+                          shutil.copytree(config, temporary / "config")
+                      if plugins.is_dir():
+                          shutil.copytree(plugins, temporary / "plugins")
+
+                      metadata = {
+                          "created_at": now.isoformat(),
+                          "database": str(database),
+                          "integrity_check": result,
+                          "image_version": "v2.3.0",
+                      }
+                      (temporary / "metadata.json").write_text(
+                          json.dumps(metadata, indent=2) + "\n", encoding="ascii"
+                      )
+                      temporary.rename(snapshot)
+                  except Exception:
+                      shutil.rmtree(temporary, ignore_errors=True)
+                      raise
+
+                  snapshots = []
+                  for candidate in backup_root.iterdir():
+                      if not candidate.is_dir() or candidate.name.startswith("."):
+                          continue
+                      try:
+                          created = datetime.strptime(
+                              candidate.name, "%Y%m%dT%H%M%SZ"
+                          ).replace(tzinfo=UTC)
+                      except ValueError:
+                          continue
+                      snapshots.append((created, candidate))
+
+                  snapshots.sort(reverse=True)
+                  keep = {path for _, path in snapshots[:14]}
+                  weekly = set()
+                  for created, path in snapshots[14:]:
+                      week = created.isocalendar()[:2]
+                      if week not in weekly and len(weekly) < 8:
+                          weekly.add(week)
+                          keep.add(path)
+                  for _, path in snapshots:
+                      if path not in keep:
+                          shutil.rmtree(path)
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsGroup: 1000
+                runAsNonRoot: true
+                runAsUser: 1000
+              volumeMounts:
+                - name: state
+                  mountPath: /state
+                - name: media
+                  mountPath: /data
+          volumes:
+            - name: state
+              persistentVolumeClaim:
+                claimName: droppedneedle-state
+            - name: media
+              persistentVolumeClaim:
+                claimName: droppedneedle-media
