@@ -61,6 +61,7 @@ spec:
           additionalSecrets:
             authelia-oidc: {}
             paperless-oidc: {}
+            argocd-oidc: {}
 
         configMap:
           theme: auto
@@ -170,6 +171,24 @@ spec:
                   use: sig
                   key:
                     path: /secrets/authelia-oidc/jwks-rs256.pem
+              # Argo CD reads groups from the ID token, and Authelia only puts
+              # them there when a claims policy asks for it.
+              claims_policies:
+                argocd:
+                  id_token:
+                    - groups
+                    - email
+                    - email_verified
+                    - preferred_username
+                    - name
+              # Clients that only admins may sign in to. Other Authelia users
+              # are refused at the consent step instead of reaching the app.
+              authorization_policies:
+                admins_only:
+                  default_policy: deny
+                  rules:
+                    - policy: one_factor
+                      subject: "group:admins"
               clients:
                 - client_id: mealie
                   client_name: Mealie
@@ -257,6 +276,55 @@ spec:
                   access_token_signed_response_alg: none
                   userinfo_signed_response_alg: none
                   token_endpoint_auth_method: client_secret_basic
+                - client_id: argocd
+                  client_name: Argo CD
+                  client_secret:
+                    path: /secrets/argocd-oidc/client-secret-digest.txt
+                  public: false
+                  authorization_policy: admins_only
+                  claims_policy: argocd
+                  require_pkce: false
+                  pkce_challenge_method: ""
+                  redirect_uris:
+                    - https://argocd.local.tylermarques.com/auth/callback
+                  scopes:
+                    - openid
+                    - profile
+                    - email
+                    - groups
+                  response_types:
+                    - code
+                  grant_types:
+                    - authorization_code
+                  access_token_signed_response_alg: none
+                  userinfo_signed_response_alg: none
+                  token_endpoint_auth_method: client_secret_basic
+                # `argocd login --sso` runs a local callback server and cannot
+                # keep a secret, so it is a separate public PKCE client. The
+                # CLI always asks for offline_access when Authelia offers it.
+                - client_id: argocd-cli
+                  client_name: Argo CD (CLI)
+                  public: true
+                  authorization_policy: admins_only
+                  claims_policy: argocd
+                  require_pkce: true
+                  pkce_challenge_method: S256
+                  redirect_uris:
+                    - http://localhost:8085/auth/callback
+                  scopes:
+                    - openid
+                    - profile
+                    - email
+                    - groups
+                    - offline_access
+                  response_types:
+                    - code
+                  grant_types:
+                    - authorization_code
+                    - refresh_token
+                  access_token_signed_response_alg: none
+                  userinfo_signed_response_alg: none
+                  token_endpoint_auth_method: none
 
         ingress:
           enabled: true

@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-config
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  source:
+    repoURL: https://github.com/Tylermarques/homelab-infra.git
+    targetRevision: main
+    path: homecluster/argocd/manifests
+  syncPolicy:
+    automated:
+      # Argo CD itself was installed by hand; this Application owns only its
+      # two config ConfigMaps, so never prune in the argocd namespace.
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=false

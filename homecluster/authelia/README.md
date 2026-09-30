@@ -69,6 +69,22 @@ credential with `homecluster/immich/bootstrap-oidc.sh` before deploying the
 Authelia Application. The client keeps password login available and does not
 automatically register new Immich accounts.
 
+## Argo CD OIDC
+
+Argo CD signs in through Authelia directly (`oidc.config` in `argocd-cm`), not
+through its bundled Dex. The Argo CD side lives in `homecluster/argocd/`; see
+its README. Create the client secret before merging a change that adds the
+client, because the Authelia pod mounts the `argocd-oidc` Secret:
+
+```sh
+homecluster/authelia/bootstrap-argocd-oidc-secrets.sh
+```
+
+Two clients exist: `argocd` (confidential, web UI) and `argocd-cli` (public
+PKCE, for `argocd login --sso`). Both use the `admins_only` authorization
+policy, so only members of `admins` can sign in, and the `argocd` claims policy,
+which puts `groups` in the ID token where Argo CD looks for it.
+
 ## User management
 
 Authelia is not a user directory and has no admin user-management UI for the

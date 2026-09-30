@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-rbac-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Map the Authelia `admins` group to Argo CD admin. There is no
+  # policy.default, so any other SSO user gets no permissions.
+  policy.csv: |
+    g, admins, role:admin
+  scopes: "[groups]"

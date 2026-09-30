@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Must match the external URL exactly; Argo CD derives the OIDC callback
+  # (<url>/auth/callback) from it.
+  url: https://argocd.local.tylermarques.com
+
+  # Authelia SSO. The client secret is read from the `argocd-oidc` Secret,
+  # created by homecluster/authelia/bootstrap-argocd-oidc-secrets.sh.
+  oidc.config: |
+    name: Authelia
+    issuer: https://auth.local.tylermarques.com
+    clientID: argocd
+    clientSecret: $argocd-oidc:clientSecret
+    cliClientID: argocd-cli
+    requestedScopes:
+      - openid
+      - profile
+      - email
+      - groups
