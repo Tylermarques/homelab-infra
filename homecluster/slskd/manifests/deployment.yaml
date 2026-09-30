@@ -6,7 +6,9 @@ metadata:
     app.kubernetes.io/name: slskd
     app.kubernetes.io/instance: slskd
 spec:
-  replicas: 1
+  # Disabled for now. Set to 1 to bring slskd back; its state, Secret and
+  # configuration are all kept.
+  replicas: 0
   strategy:
     type: Recreate
   selector:
