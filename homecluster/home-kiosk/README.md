@@ -1,7 +1,7 @@
 # Home kiosk
 
 `https://floorplan.local.tylermarques.com` is a wall-panel version of the
-illustrated Home Assistant floor plan, built for the old iPad (iPad 4, iOS
+illustrated Home Assistant floor plan, built for the old iPad (iPad Air 1st gen, iOS
 12.5.8). As of 2026.10, Home Assistant's own frontend fails on iOS 12. Its
 legacy `frontend_es5` build ships BigInt literals (`0n`), which Safari only
 supports from version 14. The companion app shows "Unable to connect to Home
