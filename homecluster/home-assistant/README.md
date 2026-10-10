@@ -1,8 +1,14 @@
 # Home Assistant ingress
 
-`home-assistant.yaml` routes `hass.local.tylermarques.com` through the home
-cluster's Traefik instance to the HAOS VM at `http://192.168.0.131:8123`.
-Requests over plain HTTP receive a permanent redirect to HTTPS.
+`manifests/home-assistant.yaml` routes `hass.local.tylermarques.com` through
+the home cluster's Traefik instance to the HAOS VM at
+`http://192.168.0.131:8123`. Requests over plain HTTP receive a permanent
+redirect to HTTPS.
+
+ArgoCD syncs `manifests/` through the `home-assistant` Application in
+`homecluster/app-of-apps/applications/`, so changes deploy on push to `main`.
+`home-control-dashboard.yaml` stays outside `manifests/` because it is a Home
+Assistant dashboard, not a Kubernetes manifest.
 
 Home Assistant must trust the k3s pod network and every node that can run
 Traefik. Home Assistant 2026.8 and newer manages HTTP settings in storage, not
