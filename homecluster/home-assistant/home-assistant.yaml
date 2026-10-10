@@ -32,6 +32,21 @@ spec:
     scheme: https
     permanent: true
 ---
+# Strips the client's permessage-deflate offer so Home Assistant serves the
+# WebSocket uncompressed. The iOS 12 iPad is stuck on companion app 2023.12.1,
+# whose Starscream client fails on HA's compressed frames with
+# `protocolError "not valid UTF-8 data"` (shown in the app as "WSError 1").
+# An empty value makes Traefik remove the header.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: home-assistant-no-ws-compression
+  namespace: default
+spec:
+  headers:
+    customRequestHeaders:
+      Sec-WebSocket-Extensions: ""
+---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -65,6 +80,13 @@ spec:
   entryPoints:
     - websecure
   routes:
+    - kind: Rule
+      match: Host(`hass.local.tylermarques.com`) && Path(`/api/websocket`)
+      middlewares:
+        - name: home-assistant-no-ws-compression
+      services:
+        - name: home-assistant
+          port: 8123
     - kind: Rule
       match: Host(`hass.local.tylermarques.com`)
       services:
