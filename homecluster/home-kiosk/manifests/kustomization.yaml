@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: default
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+# One ConfigMap per image keeps each under the 1 MiB object limit; the
+# Deployment projects them all into /images.
+configMapGenerator:
+  - name: home-kiosk-app
+    files:
+      - app/server.py
+      - app/index.html
+  - name: home-kiosk-img-day
+    files:
+      - images/day.jpg
+  - name: home-kiosk-img-night
+    files:
+      - images/night.jpg
+  - name: home-kiosk-img-night-kitchen
+    files:
+      - images/night-kitchen.jpg
+  - name: home-kiosk-img-night-living
+    files:
+      - images/night-living.jpg
+  - name: home-kiosk-img-night-both
+    files:
+      - images/night-both.jpg

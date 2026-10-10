@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: home-kiosk
+  labels:
+    app.kubernetes.io/name: home-kiosk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: home-kiosk
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: home-kiosk
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+      containers:
+        - name: home-kiosk
+          image: python:3.13-alpine@sha256:2d9aefe2fef018a7eb2c13064c89c71929800fd2e5dccdbf52ea5da5bb8d929a
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "-u", "/app/server.py"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: HA_URL
+              value: http://home-assistant.default.svc.cluster.local:8123
+            # Long-lived access token, created out of band. See ../README.md.
+            - name: HA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: home-kiosk-ha-token
+                  key: token
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: app
+              mountPath: /app
+              readOnly: true
+            - name: images
+              mountPath: /images
+              readOnly: true
+      volumes:
+        - name: app
+          configMap:
+            name: home-kiosk-app
+        - name: images
+          projected:
+            sources:
+              - configMap:
+                  name: home-kiosk-img-day
+              - configMap:
+                  name: home-kiosk-img-night
+              - configMap:
+                  name: home-kiosk-img-night-kitchen
+              - configMap:
+                  name: home-kiosk-img-night-living
+              - configMap:
+                  name: home-kiosk-img-night-both

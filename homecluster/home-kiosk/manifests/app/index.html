@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home">
+<style>
+  /* ES5 + old WebKit only: this page must run on iOS 12 Safari. */
+  html, body { margin: 0; height: 100%; background: #0e0f16; overflow: hidden; }
+  body { font-family: -apple-system, "Helvetica Neue", Helvetica, sans-serif; color: #f3eadb;
+         -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  #panel { position: absolute; }
+  #panel img.plan { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .el { position: absolute; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); white-space: nowrap; }
+  .pill { background: rgba(18,18,24,0.78); border-radius: 999px; padding: 0.35em 0.9em; font-size: 1.35em;
+          font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  /* 4.4em is about 45pt on the iPad: a comfortable tap target. */
+  .light { width: 4.4em; height: 4.4em; border-radius: 50%; background: rgba(18,18,24,0.78);
+           box-shadow: 0 2px 8px rgba(0,0,0,0.5); text-align: center; line-height: 4.4em;
+           border: 0.2em solid rgba(243,234,219,0.55); -webkit-box-sizing: border-box; box-sizing: border-box; }
+  .light span { font-size: 2.2em; opacity: 0.75; -webkit-filter: grayscale(1); filter: grayscale(1); }
+  .light.on { border-color: rgba(255,231,180,0.95); background: rgba(255,193,90,0.92); box-shadow: 0 0 1.6em rgba(255,193,90,0.85); }
+  .light.on span { opacity: 1; -webkit-filter: none; filter: none; }
+  .light.pending { opacity: 0.6; }
+  .weather { text-align: center; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  #w-icon { font-size: 9em; line-height: 1.1; }
+  #w-temp { font-size: 7em; font-weight: 700; line-height: 1.1; }
+  #w-cond { font-size: 2.4em; font-weight: 500; margin-top: 0.2em; }
+  .w-row { font-size: 2.2em; font-weight: 500; margin-top: 0.6em; }
+  .w-row span { margin: 0 0.5em; }
+  #offline { position: absolute; right: 1em; bottom: 1em; font-size: 1em; padding: 0.3em 0.8em; border-radius: 999px;
+             background: rgba(160,40,40,0.85); display: none; }
+</style>
+</head>
+<body>
+<div id="panel">
+  <img class="plan" id="plan" alt="">
+
+  <!-- Positions are % of the 4:3 crop (x 2%..77% of the 16:9 HA panel). -->
+  <div class="el light" id="light-living_room" data-zone="living_room" style="left:41.9%;top:53.4%"><span>💡</span></div>
+  <div class="el light" id="light-kitchen" data-zone="kitchen" style="left:45.9%;top:43.5%"><span>💡</span></div>
+
+  <div class="el pill" style="left:41.6%;top:31.7%"><span id="upstairs_hallway-temperature"></span> · <span id="upstairs_hallway-humidity"></span></div>
+  <div class="el pill" style="left:33.0%;top:47.5%"><span id="living_room-temperature"></span> · <span id="living_room-humidity"></span></div>
+  <div class="el pill" style="left:30.4%;top:65.2%"><span id="downstairs_hallway-temperature"></span> · <span id="downstairs_hallway-humidity"></span></div>
+
+  <div class="el weather" style="left:82%;top:24%">
+    <div id="w-icon"></div>
+    <div id="w-temp"></div>
+    <div id="w-cond"></div>
+    <div class="w-row"><span id="w-hum"></span><span id="w-wind"></span></div>
+  </div>
+
+  <div id="offline">Offline</div>
+</div>
+<script>
+(function () {
+  var IMAGE_VERSION = "__IMAGE_VERSION__";
+  var POLL_MS = 3000;
+  var RELOAD_MS = 6 * 60 * 60 * 1000; // a fresh page every few hours keeps old WebKit healthy
+  var ICONS = {
+    "clear-night": "🌙", "cloudy": "☁️", "fog": "🌫️", "hail": "🌨️", "lightning": "🌩️",
+    "lightning-rainy": "⛈️", "partlycloudy": "⛅", "pouring": "🌧️", "rainy": "🌦️", "snowy": "❄️",
+    "snowy-rainy": "🌨️", "sunny": "☀️", "windy": "💨", "windy-variant": "💨", "exceptional": "⚠️"
+  };
+  var CONDITIONS = { "partlycloudy": "Partly cloudy", "clear-night": "Clear", "windy-variant": "Windy" };
+  var panel = document.getElementById("panel");
+  var plan = document.getElementById("plan");
+  var pending = {};
+  var last = null;
+
+  function $(id) { return document.getElementById(id); }
+  function text(id, value) { var el = $(id); if (el.textContent !== value) { el.textContent = value; } }
+
+  // Fit the 4:3 artwork inside the screen; everything else is sized in em of panel width / 100.
+  function fit() {
+    var w = window.innerWidth, h = window.innerHeight;
+    var pw = Math.min(w, h * 4 / 3), ph = pw * 3 / 4;
+    panel.style.width = pw + "px";
+    panel.style.height = ph + "px";
+    panel.style.left = (w - pw) / 2 + "px";
+    panel.style.top = (h - ph) / 2 + "px";
+    panel.style.fontSize = pw / 100 + "px";
+  }
+
+  function img(name) { return "img/" + name + ".jpg?v=" + IMAGE_VERSION; }
+
+  function planImage(s) {
+    if (!s.night) { return img("day"); }
+    var k = s.lights.kitchen === "on", l = s.lights.living_room === "on";
+    if (k && l) { return img("night-both"); }
+    if (k) { return img("night-kitchen"); }
+    if (l) { return img("night-living"); }
+    return img("night");
+  }
+
+  function conditionText(c) {
+    if (!c) { return ""; }
+    if (CONDITIONS[c]) { return CONDITIONS[c]; }
+    c = c.replace(/-/g, " ");
+    return c.charAt(0).toUpperCase() + c.slice(1);
+  }
+
+  function render(s) {
+    for (var p in pending) { s.lights[p] = pending[p]; } // keep the optimistic state until HA catches up
+    var src = planImage(s);
+    if (plan.getAttribute("src") !== src) { plan.setAttribute("src", src); }
+
+    for (var zone in s.lights) {
+      $("light-" + zone).className = "el light" + (s.lights[zone] === "on" ? " on" : "") + (pending[zone] ? " pending" : "");
+    }
+    for (var room in s.sensors) {
+      var r = s.sensors[room];
+      text(room + "-temperature", "🌡 " + (r.temperature || "–"));
+      text(room + "-humidity", "💧 " + (r.humidity || "–"));
+    }
+    var w = s.weather;
+    text("w-icon", ICONS[w.condition] || "");
+    text("w-temp", w.temperature == null ? "" : w.temperature + " " + w.temperature_unit);
+    text("w-cond", conditionText(w.condition));
+    text("w-hum", w.humidity == null ? "" : "💧 " + w.humidity + " %");
+    text("w-wind", w.wind_speed == null ? "" : "🍃 " + w.wind_speed + " " + w.wind_speed_unit);
+  }
+
+  function request(method, url, done) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.timeout = 10000;
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState !== 4) { return; }
+      var ok = xhr.status >= 200 && xhr.status < 300;
+      var body = null;
+      if (ok) { try { body = JSON.parse(xhr.responseText); } catch (e) { ok = false; } }
+      done(ok, body);
+    };
+    xhr.send();
+  }
+
+  function poll() {
+    request("GET", "api/state", function (ok, body) {
+      $("offline").style.display = ok ? "none" : "block";
+      if (ok) { last = body; render(body); }
+      setTimeout(poll, POLL_MS);
+    });
+  }
+
+  function toggle(zone) {
+    if (pending[zone]) { return; }
+    var wasOn = $("light-" + zone).className.indexOf(" on") !== -1;
+    pending[zone] = wasOn ? "off" : "on"; // optimistic flip
+    if (last) { render(last); }
+    request("POST", "api/toggle/" + zone, function () {
+      // HA takes a moment to report the new state; hold the optimistic one briefly.
+      setTimeout(function () { delete pending[zone]; }, 1500);
+    });
+  }
+
+  var lights = document.querySelectorAll(".light");
+  for (var i = 0; i < lights.length; i++) {
+    (function (el) {
+      el.addEventListener("touchend", function (e) { e.preventDefault(); toggle(el.getAttribute("data-zone")); });
+      el.addEventListener("click", function () { toggle(el.getAttribute("data-zone")); });
+    })(lights[i]);
+  }
+
+  // Preload the night variants so a light toggle swaps instantly.
+  ["night", "night-kitchen", "night-living", "night-both"].forEach(function (n) { new Image().src = img(n); });
+
+  window.addEventListener("resize", fit);
+  window.addEventListener("orientationchange", function () { setTimeout(fit, 300); });
+  document.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
+  fit();
+  poll();
+  setTimeout(function () { location.reload(); }, RELOAD_MS);
+})();
+</script>
+</body>
+</html>
