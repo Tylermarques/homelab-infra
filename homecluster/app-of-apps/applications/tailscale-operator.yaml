@@ -9,6 +9,11 @@ kind: Application
 metadata:
   name: tailscale-operator
   namespace: argocd
+  annotations:
+    # The client-side diff reported the operator Deployment as OutOfSync
+    # after every sync even though nothing changed; a server-side dry-run
+    # diff applies API defaults and compares like-for-like.
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
 spec:
   project: default
   destination:
