@@ -1,5 +1,5 @@
-# The share manager creates and deletes the per-share funnel Ingresses in its
-# own namespace, and nothing else.
+# The share manager may switch Funnel on its one Ingress and keep its share
+# list in one ConfigMap, and nothing else.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -12,7 +12,17 @@ metadata:
 rules:
   - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses"]
-    verbs: ["get", "list", "create", "delete"]
+    resourceNames: ["share-funnel"]
+    verbs: ["get", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["immich-share-state"]
+    verbs: ["get", "update"]
+  # create cannot be limited by resourceNames; it is only used once, to make
+  # immich-share-state.
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

@@ -1,0 +1,27 @@
+# The one public entry point for all shares: https://share.taildff07.ts.net,
+# served by Immich Public Proxy. The share manager adds the
+# `tailscale.com/funnel: "true"` annotation while at least one share is active
+# and removes it when none are. Without it, the device is reachable only from
+# the tailnet and the name does not resolve publicly. The device and its
+# certificate stay the same between shares.
+#
+# The annotation is deliberately absent here. The immich-share Application
+# ignores it (ignoreDifferences + RespectIgnoreDifferences), so Argo CD never
+# switches the funnel itself.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: share-funnel
+  annotations:
+    # The tailnet policy gives this tag, and only this tag, the funnel attribute.
+    tailscale.com/tags: tag:k8s-funnel
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: immich-public-proxy
+      port:
+        number: 3000
+  tls:
+    - hosts:
+        - share

@@ -1,0 +1,40 @@
+# Tailscale Kubernetes operator. Named after the Helm release it replaced
+# (hand-installed v1.76.6, Nov 2024) so Argo CD adopted those objects in place.
+#
+# OAuth credentials are not in git: with `oauth` unset the chart mounts the
+# existing `operator-oauth` Secret in the tailscale namespace. To rotate them,
+# edit that Secret and restart the operator Deployment.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tailscale-operator
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tailscale
+  source:
+    repoURL: https://pkgs.tailscale.com/helmcharts
+    chart: tailscale-operator
+    targetRevision: 1.102.4
+    helm:
+      releaseName: tailscale-operator
+      valuesObject:
+        # In-process Kubernetes API server proxy on the tailnet, as before.
+        apiServerProxyConfig:
+          mode: "true"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - CreateNamespace=true
+      # The CRDs are larger than the last-applied annotation allows.
+      - ServerSideApply=true

@@ -43,9 +43,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            # The tailnet policy must give this tag the funnel attribute.
-            - name: FUNNEL_TAGS
-              value: tag:k8s-funnel
             - name: MAX_DAYS
               value: "30"
           readinessProbe:

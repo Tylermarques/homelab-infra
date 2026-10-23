@@ -8,10 +8,11 @@ Local services resolve for both home-LAN and tailnet clients via public DNS:
   controlled by `HOME_LAN_INGRESS_IP` in `rackspace/.env`) points at the home
   cluster's Traefik LAN IP. It is unproxied — anyone can resolve it, but only
   clients on the LAN or tailnet can route to it.
-- A Tailscale `Connector` (subnet router) deployed by the `homelab/` Pulumi
-  project advertises the LAN subnet (`HOME_LAN_SUBNET`) to the tailnet, so
-  tailnet clients can reach that LAN IP. The route must be approved once in
-  the Tailscale admin console (or auto-approved via ACL `autoApprovers`).
+- A Tailscale `Connector` (subnet router, `homecluster/tailscale/`, synced by
+  the `tailscale` Argo CD Application) advertises the LAN subnet
+  (`HOME_LAN_SUBNET`) to the tailnet, so tailnet clients can reach that LAN IP.
+  The route must be approved once in the Tailscale admin console (or
+  auto-approved via ACL `autoApprovers`).
 - TLS comes from the existing `*.local.tylermarques.com` wildcard cert
   (cert-manager DNS-01, `rackspace/apps/cert_manager/`).
 

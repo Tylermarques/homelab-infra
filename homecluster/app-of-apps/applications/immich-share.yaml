@@ -12,6 +12,14 @@ spec:
     repoURL: https://github.com/Tylermarques/homelab-infra.git
     targetRevision: main
     path: homecluster/immich-share/manifests
+  # The share manager switches Funnel on share-funnel by adding and removing
+  # this annotation. Argo CD must neither report nor undo that.
+  ignoreDifferences:
+    - group: networking.k8s.io
+      kind: Ingress
+      name: share-funnel
+      jsonPointers:
+        - /metadata/annotations/tailscale.com~1funnel
   syncPolicy:
     automated:
       prune: true
@@ -25,3 +33,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true

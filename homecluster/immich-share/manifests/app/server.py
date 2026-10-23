@@ -1,10 +1,12 @@
 """Time-limited public links to Immich albums over Tailscale Funnel.
 
-Each share is an Immich shared link plus one Tailscale Ingress with Funnel on,
-pointing at Immich Public Proxy. The Ingress is the only record of a share:
-its annotations hold the name, album, Immich link ID and expiry. A background
-loop deletes the Immich link and the Ingress once the expiry passes, and the
-Tailscale operator then removes the funnel device.
+Each share is an Immich shared link for one album, recorded in the
+`immich-share-state` ConfigMap with its name and expiry. All shares are served
+through one Tailscale Ingress (`share-funnel`, managed in git) in front of
+Immich Public Proxy. This service turns Funnel on for that Ingress while at
+least one share is active and off once none are, so the public hostname only
+resolves while something is shared. A background loop deletes each Immich
+link once its expiry passes.
 
 Stdlib only, so it runs on the stock python image.
 """
@@ -26,22 +28,20 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 IMMICH_URL = os.environ["IMMICH_URL"].rstrip("/")
 IMMICH_API_KEY = os.environ["IMMICH_API_KEY"]
 NAMESPACE = os.environ["NAMESPACE"]
-PROXY_SERVICE = os.environ.get("PROXY_SERVICE", "immich-public-proxy")
-PROXY_PORT = int(os.environ.get("PROXY_PORT", "3000"))
-FUNNEL_TAGS = os.environ.get("FUNNEL_TAGS", "tag:k8s-funnel")
-HOSTNAME_PREFIX = os.environ.get("HOSTNAME_PREFIX", "photos-")
+FUNNEL_INGRESS = os.environ.get("FUNNEL_INGRESS", "share-funnel")
+STATE_CONFIGMAP = os.environ.get("STATE_CONFIGMAP", "immich-share-state")
 MAX_DAYS = int(os.environ.get("MAX_DAYS", "30"))
 RECONCILE_SECONDS = int(os.environ.get("RECONCILE_SECONDS", "60"))
 PORT = int(os.environ.get("PORT", "8080"))
 
 SA_DIR = "/var/run/secrets/kubernetes.io/serviceaccount"
 KUBE_URL = "https://kubernetes.default.svc"
-INGRESSES = f"/apis/networking.k8s.io/v1/namespaces/{NAMESPACE}/ingresses"
-MANAGED_SELECTOR = "app.kubernetes.io/managed-by=immich-share"
-ANN = "immich-share.tylermarques.com/"
+INGRESS_PATH = f"/apis/networking.k8s.io/v1/namespaces/{NAMESPACE}/ingresses/{FUNNEL_INGRESS}"
+CONFIGMAPS_PATH = f"/api/v1/namespaces/{NAMESPACE}/configmaps"
+FUNNEL_ANNOTATION = "tailscale.com/funnel"
 
 # Serialises create, revoke and the expiry loop so they never race on the
-# same Ingress or Immich link.
+# state ConfigMap, the funnel annotation or an Immich link.
 lock = threading.Lock()
 
 
@@ -51,11 +51,11 @@ class ApiError(Exception):
         self.status = status
 
 
-def request(url, method, headers, body=None, context=None):
+def request(url, method, headers, body=None, context=None, content_type="application/json"):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method, headers=headers)
     if data is not None:
-        req.add_header("Content-Type", "application/json")
+        req.add_header("Content-Type", content_type)
     try:
         with urllib.request.urlopen(req, timeout=15, context=context) as resp:
             raw = resp.read()
@@ -69,12 +69,12 @@ def immich(method, path, body=None):
     return request(IMMICH_URL + "/api" + path, method, headers, body)
 
 
-def kube(method, path, body=None):
+def kube(method, path, body=None, content_type="application/json"):
     # Read the token on every call: the kubelet rotates it.
     with open(f"{SA_DIR}/token") as f:
         headers = {"Authorization": "Bearer " + f.read().strip()}
     context = ssl.create_default_context(cafile=f"{SA_DIR}/ca.crt")
-    return request(KUBE_URL + path, method, headers, body, context)
+    return request(KUBE_URL + path, method, headers, body, context, content_type)
 
 
 def now():
@@ -89,55 +89,92 @@ def iso(t):
     return t.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def list_shares():
-    items = kube("GET", INGRESSES + "?labelSelector=" + urllib.parse.quote(MANAGED_SELECTOR))["items"]
-    shares = []
-    for ing in items:
-        ann = ing["metadata"].get("annotations", {})
-        lb = ing.get("status", {}).get("loadBalancer", {}).get("ingress") or [{}]
-        shares.append({
-            "ingress": ing["metadata"]["name"],
-            "name": ann.get(ANN + "name", ""),
-            "album": ann.get(ANN + "album-name", ""),
-            "link_id": ann.get(ANN + "link-id", ""),
-            "expires_at": parse_time(ann[ANN + "expires-at"]),
-            "requested_host": ing["spec"]["tls"][0]["hosts"][0],
-            # The operator fills this in with the device's MagicDNS name once
-            # the funnel proxy has joined the tailnet.
-            "host": lb[0].get("hostname"),
-        })
-    return sorted(shares, key=lambda s: s["expires_at"])
-
-
-def remove_share(share):
-    """Delete the Immich link first, then the Ingress (and so the funnel)."""
-    if share["link_id"]:
-        try:
-            immich("DELETE", "/shared-links/" + share["link_id"])
-        except ApiError as e:
-            if e.status != 404:
-                # Leave the Ingress so the next pass retries; Immich still
-                # refuses the link after its own expiresAt.
-                print(f"could not delete Immich link for {share['ingress']}: {e}", flush=True)
-                return
+def load_state():
+    """Return (configmap, shares). Each share is stored as one JSON data key."""
     try:
-        kube("DELETE", INGRESSES + "/" + share["ingress"])
+        cm = kube("GET", f"{CONFIGMAPS_PATH}/{STATE_CONFIGMAP}")
     except ApiError as e:
         if e.status != 404:
             raise
-    print(f"removed share {share['ingress']} ({share['name']})", flush=True)
+        cm = kube("POST", CONFIGMAPS_PATH, {
+            "apiVersion": "v1",
+            "kind": "ConfigMap",
+            # Not in git and without Argo CD's tracking label, so Argo CD
+            # neither prunes nor resets it.
+            "metadata": {"name": STATE_CONFIGMAP, "labels": {"app.kubernetes.io/managed-by": "immich-share"}},
+            "data": {},
+        })
+    shares = []
+    for share_id, raw in (cm.get("data") or {}).items():
+        share = json.loads(raw)
+        share["id"] = share_id
+        share["expires_at"] = parse_time(share["expires_at"])
+        shares.append(share)
+    return cm, sorted(shares, key=lambda s: s["expires_at"])
+
+
+def save_state(cm, shares):
+    cm["data"] = {
+        s["id"]: json.dumps({
+            "name": s["name"],
+            "album": s["album"],
+            "link_id": s["link_id"],
+            "expires_at": iso(s["expires_at"]),
+        })
+        for s in shares
+    }
+    # The PUT carries the resourceVersion we read, so a concurrent edit fails
+    # with 409 instead of being overwritten.
+    kube("PUT", f"{CONFIGMAPS_PATH}/{STATE_CONFIGMAP}", cm)
+
+
+def funnel_status():
+    """Return (funnel on, public hostname or None)."""
+    ing = kube("GET", INGRESS_PATH)
+    on = ing["metadata"].get("annotations", {}).get(FUNNEL_ANNOTATION) == "true"
+    lb = ing.get("status", {}).get("loadBalancer", {}).get("ingress") or [{}]
+    # The operator fills this in with the device's MagicDNS name.
+    return on, lb[0].get("hostname")
+
+
+def set_funnel(on):
+    if funnel_status()[0] == on:
+        return
+    patch = {"metadata": {"annotations": {FUNNEL_ANNOTATION: "true" if on else None}}}
+    kube("PATCH", INGRESS_PATH, patch, "application/merge-patch+json")
+    print(f"funnel {'on' if on else 'off'}", flush=True)
+
+
+def delete_link(share):
+    try:
+        immich("DELETE", "/shared-links/" + share["link_id"])
+    except ApiError as e:
+        if e.status != 404:
+            raise
+    print(f"removed share {share['id']} ({share['name']})", flush=True)
 
 
 def reconcile():
     with lock:
-        shares = list_shares()
+        cm, shares = load_state()
         link_ids = {link["id"] for link in immich("GET", "/shared-links")}
+        keep = []
         for share in shares:
-            if share["expires_at"] <= now():
-                remove_share(share)
-            elif share["link_id"] not in link_ids:
-                # The link was deleted in Immich itself; drop the funnel too.
-                remove_share(share)
+            if share["expires_at"] <= now() or share["link_id"] not in link_ids:
+                # Expired, or the link was deleted in Immich itself.
+                try:
+                    delete_link(share)
+                except ApiError as e:
+                    # Keep the record so the next pass retries; Immich still
+                    # refuses the link after its own expiresAt.
+                    print(f"could not delete Immich link for {share['id']}: {e}", flush=True)
+                    keep.append(share)
+                    continue
+            else:
+                keep.append(share)
+        if len(keep) != len(shares):
+            save_state(cm, keep)
+        set_funnel(any(s["expires_at"] > now() for s in keep))
 
 
 def reconcile_loop():
@@ -147,12 +184,6 @@ def reconcile_loop():
         except Exception as e:  # keep the loop alive through API outages
             print(f"reconcile failed: {e}", flush=True)
         time.sleep(RECONCILE_SECONDS)
-
-
-def make_hostname(name):
-    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40].strip("-") or "share"
-    # The random suffix keeps hostnames unique across shares with the same name.
-    return f"{HOSTNAME_PREFIX}{slug}-{secrets.token_hex(2)}"
 
 
 def create_share(form):
@@ -189,45 +220,33 @@ def create_share(form):
         body["password"] = password
 
     with lock:
+        cm, shares = load_state()
         link = immich("POST", "/shared-links", body)
-        ingress = {
-            "apiVersion": "networking.k8s.io/v1",
-            "kind": "Ingress",
-            "metadata": {
-                "name": "share-" + secrets.token_hex(4),
-                "namespace": NAMESPACE,
-                # Deliberately not app.kubernetes.io/instance: Argo CD tracks
-                # that label, and would prune these Ingresses as strays.
-                "labels": {"app.kubernetes.io/managed-by": "immich-share"},
-                "annotations": {
-                    "tailscale.com/funnel": "true",
-                    "tailscale.com/tags": FUNNEL_TAGS,
-                    ANN + "name": name,
-                    ANN + "album-name": albums[album_id],
-                    ANN + "link-id": link["id"],
-                    ANN + "expires-at": iso(expires_at),
-                },
-            },
-            "spec": {
-                "ingressClassName": "tailscale",
-                "defaultBackend": {"service": {"name": PROXY_SERVICE, "port": {"number": PROXY_PORT}}},
-                "tls": [{"hosts": [make_hostname(name)]}],
-            },
-        }
+        shares.append({
+            "id": secrets.token_hex(4),
+            "name": name,
+            "album": albums[album_id],
+            "link_id": link["id"],
+            "expires_at": expires_at,
+        })
         try:
-            kube("POST", INGRESSES, ingress)
+            save_state(cm, shares)
         except Exception:
             immich("DELETE", "/shared-links/" + link["id"])
             raise
+        set_funnel(True)
 
 
-def revoke_share(ingress_name):
+def revoke_share(share_id):
     with lock:
-        for share in list_shares():
-            if share["ingress"] == ingress_name:
-                remove_share(share)
-                return
-    raise ValueError("That share no longer exists.")
+        cm, shares = load_state()
+        share = next((s for s in shares if s["id"] == share_id), None)
+        if share is None:
+            raise ValueError("That share no longer exists.")
+        delete_link(share)
+        rest = [s for s in shares if s["id"] != share_id]
+        save_state(cm, rest)
+        set_funnel(bool(rest))
 
 
 PAGE = """<!doctype html>
@@ -259,8 +278,9 @@ PAGE = """<!doctype html>
 </head>
 <body>
 <h1>Immich sharing</h1>
-<p class="lead">Each share gets its own public Tailscale Funnel address. When it expires,
-the Immich link and the funnel are both removed.</p>
+<p class="lead">Shares are served from {funnel_host}. That address is public only while at
+least one share is active. Each share's link stops working at its own expiry.</p>
+<p class="muted">Funnel is {funnel_state}.</p>
 {error}
 <form class="create" method="post" action="/shares">
   <label>Name <input name="name" maxlength="60" required placeholder="Grandma's visit"></label>
@@ -314,23 +334,23 @@ def render_page(error=None):
         f'<option value="{e(a["id"])}">{e(a["albumName"])} ({a["assetCount"]})</option>' for a in albums
     )
     keys = {link["id"]: link["key"] for link in immich("GET", "/shared-links")}
-    shares = list_shares()
-    pending = False
+    _, shares = load_state()
+    funnel_on, host = funnel_status()
+    pending = bool(shares) and not (funnel_on and host)
     if shares:
         rows = []
         for s in shares:
             key = keys.get(s["link_id"])
-            if s["host"] and key:
-                url = f"https://{s['host']}/share/{key}"
+            if host and key:
+                url = f"https://{host}/share/{key}"
                 link = f'<a href="{e(url)}">{e(url)}</a>'
             else:
-                pending = True
-                link = f'<span class="muted">Starting funnel {e(s["requested_host"])}…</span>'
+                link = '<span class="muted">Waiting for the funnel…</span>'
             rows.append(
                 f"<tr><td>{e(s['name'])}<br><span class='muted'>{e(s['album'])}</span></td>"
                 f"<td class='url'>{link}</td>"
                 f"<td><time datetime='{iso(s['expires_at'])}'>{iso(s['expires_at'])}</time></td>"
-                f"<td><form method='post' action='/shares/{e(s['ingress'])}/revoke'>"
+                f"<td><form method='post' action='/shares/{e(s['id'])}/revoke'>"
                 f"<button type='submit'>Revoke now</button></form></td></tr>"
             )
         share_html = (
@@ -341,6 +361,8 @@ def render_page(error=None):
         share_html = '<p class="muted">No active shares.</p>'
     return PAGE.format(
         refresh='<meta http-equiv="refresh" content="10">' if pending and not error else "",
+        funnel_host=e(host or "the share funnel"),
+        funnel_state="on" if funnel_on else "off",
         error=f'<p class="error">{e(error)}</p>' if error else "",
         album_options=album_options,
         shares=share_html,
@@ -383,7 +405,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         length = int(self.headers.get("Content-Length") or 0)
         form = dict(urllib.parse.parse_qsl(self.rfile.read(length).decode()))
-        revoke = re.fullmatch(r"/shares/(share-[0-9a-f]+)/revoke", self.path)
+        revoke = re.fullmatch(r"/shares/([0-9a-f]+)/revoke", self.path)
         try:
             if self.path == "/shares":
                 create_share(form)

@@ -6,6 +6,7 @@ resources:
   - immich-public-proxy.yaml
   - share-manager.yaml
   - ingress.yaml
+  - funnel-ingress.yaml
 configMapGenerator:
   - name: immich-share-app
     files:

@@ -1,6 +1,6 @@
 # Immich Public Proxy serves only shared-link pages and their assets, so the
-# funnels never expose the Immich login or API. It has no route of its own:
-# the share manager points each share's funnel Ingress at this Service.
+# funnel never exposes the Immich login or API. Its only route is the
+# share-funnel Ingress (funnel-ingress.yaml).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,6 +33,10 @@ spec:
               value: http://immich-server.immich.svc.cluster.local:2283
             - name: IPP_CONFIG
               value: /config/config.json
+            # Used for the og:image link previews. Without it IPP builds an
+            # http:// URL, because the funnel forwards plain HTTP to it.
+            - name: PUBLIC_BASE_URL
+              value: https://share.taildff07.ts.net
           readinessProbe:
             httpGet:
               path: /share/healthcheck
