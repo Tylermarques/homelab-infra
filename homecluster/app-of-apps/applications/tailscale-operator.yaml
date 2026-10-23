@@ -24,6 +24,14 @@ spec:
         # In-process Kubernetes API server proxy on the tailnet, as before.
         apiServerProxyConfig:
           mode: "true"
+  # The chart renders OPERATOR_LOGIN_SERVER with an empty value, which the API
+  # server drops, so the Deployment would show OutOfSync forever.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: operator
+      jqPathExpressions:
+        - '.spec.template.spec.containers[].env[] | select(.name == "OPERATOR_LOGIN_SERVER") | .value'
   syncPolicy:
     automated:
       prune: true
