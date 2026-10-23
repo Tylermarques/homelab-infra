@@ -1,0 +1,27 @@
+# The share manager creates and deletes the per-share funnel Ingresses in its
+# own namespace, and nothing else.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: immich-share
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: immich-share
+rules:
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: immich-share
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: immich-share
+subjects:
+  - kind: ServiceAccount
+    name: immich-share

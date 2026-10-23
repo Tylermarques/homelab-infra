@@ -1,0 +1,73 @@
+# share.local.tylermarques.com -> the share manager UI, LAN and tailnet only.
+# Authelia limits it to admins (rule in the authelia Application). The *.local
+# wildcard in Pi-hole already points at Traefik, so no DNS record is needed.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: share-local-tylermarques-com
+spec:
+  secretName: share-local-tylermarques-prod-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: share.local.tylermarques.com
+  dnsNames:
+    - share.local.tylermarques.com
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: immich-share-https-redirect
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: immich-share-http
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`share.local.tylermarques.com`)
+      middlewares:
+        - name: immich-share-https-redirect
+      services:
+        - name: immich-share
+          port: 8080
+---
+# A standard Ingress rather than an IngressRoute: Traefik does not allow
+# cross-namespace middleware references on IngressRoutes here
+# (allowCrossNamespace is off), but this annotation form works.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: immich-share
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Immich sharing
+    gethomepage.dev/group: Media
+    gethomepage.dev/icon: immich.png
+    gethomepage.dev/pod-selector: app.kubernetes.io/name=immich-share
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: authelia-authelia-forwardauth@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls:
+    - secretName: share-local-tylermarques-prod-tls
+      hosts:
+        - share.local.tylermarques.com
+  rules:
+    - host: share.local.tylermarques.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: immich-share
+                port:
+                  number: 8080

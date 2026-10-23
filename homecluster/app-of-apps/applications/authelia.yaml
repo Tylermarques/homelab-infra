@@ -125,6 +125,14 @@ spec:
               - domain: media.local.tylermarques.com
                 policy: deny
 
+              # Immich sharing (homecluster/immich-share) publishes albums to
+              # the internet, so only admins may use it.
+              - domain: share.local.tylermarques.com
+                subject: "group:admins"
+                policy: one_factor
+              - domain: share.local.tylermarques.com
+                policy: deny
+
               - domain: "*.local.tylermarques.com"
                 policy: one_factor
           session:

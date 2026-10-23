@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-share
+  labels:
+    app.kubernetes.io/name: immich-share
+spec:
+  # One replica: the expiry loop and share creation share an in-process lock.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: immich-share
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: immich-share
+    spec:
+      serviceAccountName: immich-share
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+      containers:
+        - name: immich-share
+          image: python:3.13-alpine@sha256:2d9aefe2fef018a7eb2c13064c89c71929800fd2e5dccdbf52ea5da5bb8d929a
+          imagePullPolicy: IfNotPresent
+          command: ["python3", "-u", "/app/server.py"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: IMMICH_URL
+              value: http://immich-server.immich.svc.cluster.local:2283
+            # Immich API key, created out of band. See ../README.md.
+            - name: IMMICH_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: immich-share-api-key
+                  key: api-key
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # The tailnet policy must give this tag the funnel attribute.
+            - name: FUNNEL_TAGS
+              value: tag:k8s-funnel
+            - name: MAX_DAYS
+              value: "30"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: app
+              mountPath: /app
+              readOnly: true
+      volumes:
+        - name: app
+          configMap:
+            name: immich-share-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-share
+spec:
+  selector:
+    app.kubernetes.io/name: immich-share
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

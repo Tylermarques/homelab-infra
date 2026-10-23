@@ -1,0 +1,62 @@
+{
+  "ipp": {
+    "responseHeaders": {
+      "Cache-Control": "public, max-age=2592000",
+      "Access-Control-Allow-Origin": "*"
+    },
+    "maxDownloadQuality": "original",
+    "maxZoomQuality": "preview",
+    "motionPhotos": true,
+    "downloadedFilename": 0,
+    "allowDownload": 1,
+    "uploadUrl": "/upload",
+    "allowSlugLinks": true,
+    "showHomePage": false,
+    "showMetadata": {
+      "description": {
+        "caption": false,
+        "sidebar": false
+      },
+      "exif": {
+        "dateTimeOriginal": false,
+        "timeZone": false,
+        "fileName": false,
+        "dimensions": false,
+        "fileSize": false,
+        "make": false,
+        "model": false,
+        "lensModel": false,
+        "exposureTime": false,
+        "iso": false,
+        "fNumber": false,
+        "focalLength": false
+      },
+      "location": {
+        "city": false,
+        "state": false,
+        "country": false,
+        "gps": false
+      }
+    },
+    "customInvalidResponse": false,
+    "gallery": {
+      "singleImage": false,
+      "singleVideo": true,
+      "singleItemAutoOpen": true,
+      "showTitle": true,
+      "showDescription": false,
+      "showExpiryDate": false,
+      "expiryDateFormat": "YYYY-MM-DD",
+      "expiryDateLocale": "",
+      "groupByDate": false,
+      "showDownloadZip": true,
+      "cacheTime": 300
+    },
+    "lightbox": {
+      "showArrows": true,
+      "showDownload": true,
+      "mobileArrows": false,
+      "autoPlayVideos": false
+    }
+  }
+}

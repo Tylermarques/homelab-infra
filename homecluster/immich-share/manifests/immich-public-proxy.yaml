@@ -1,0 +1,76 @@
+# Immich Public Proxy serves only shared-link pages and their assets, so the
+# funnels never expose the Immich login or API. It has no route of its own:
+# the share manager points each share's funnel Ingress at this Service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-public-proxy
+  labels:
+    app.kubernetes.io/name: immich-public-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: immich-public-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: immich-public-proxy
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+        - name: immich-public-proxy
+          image: docker.io/alangrainger/immich-public-proxy:4.0.0@sha256:54eb2a83f2d76a2e7e6b971638b011863ccb57a248e1d0a3e8a0f703c1f795dd
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: IMMICH_URL
+              value: http://immich-server.immich.svc.cluster.local:2283
+            - name: IPP_CONFIG
+              value: /config/config.json
+          readinessProbe:
+            httpGet:
+              path: /share/healthcheck
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /share/healthcheck
+              port: http
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: immich-public-proxy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-public-proxy
+spec:
+  selector:
+    app.kubernetes.io/name: immich-public-proxy
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
