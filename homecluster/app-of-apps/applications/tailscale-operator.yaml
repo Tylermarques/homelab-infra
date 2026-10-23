@@ -21,17 +21,13 @@ spec:
     helm:
       releaseName: tailscale-operator
       valuesObject:
+        # The default control server, set explicitly: left empty, the chart
+        # renders an empty OPERATOR_LOGIN_SERVER value, which the API server
+        # drops, and the Deployment shows OutOfSync forever.
+        loginServer: https://controlplane.tailscale.com
         # In-process Kubernetes API server proxy on the tailnet, as before.
         apiServerProxyConfig:
           mode: "true"
-  # The chart renders OPERATOR_LOGIN_SERVER with an empty value, which the API
-  # server drops, so the Deployment would show OutOfSync forever.
-  ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      name: operator
-      jqPathExpressions:
-        - '.spec.template.spec.containers[].env[] | select(.name == "OPERATOR_LOGIN_SERVER") | .value'
   syncPolicy:
     automated:
       prune: true
