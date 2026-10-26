@@ -7,6 +7,8 @@
 - PostgreSQL: `15.18` with pgvector `0.8.0` and VectorChord `1.1.1`
 - Queue: persistent Valkey `9.1`
 - Media: `immich-library`, a retained 250 GiB NFS PVC mounted at `/data`
+- Upload folder: `immich-uploads`, a static read-only NFS PV for
+  `192.168.0.71:/main/plex/immich-uploads`, mounted at `/mnt/immich-uploads`
 - Database: `immich-db-1`, a retained 10 GiB local PVC on `k3s-worker-4`
 
 Deploy the application with:
@@ -19,6 +21,23 @@ helm upgrade --install immich \
   --values homecluster/immich/values.yaml \
   --wait
 ```
+
+Apply `storage.yaml` before the Helm upgrade, because the server needs the
+`immich-uploads` PVC.
+
+## Upload folder
+
+Copy photos from a computer or camera into `/main/plex/immich-uploads` on the
+Proxmox NFS export. From a Mac, connect to `smb://192.168.0.71/immich-uploads`.
+The `[immich-uploads]` Samba share is defined in `/etc/samba/smb.conf` on the
+Proxmox host, not in this repository. Immich reads this folder as the External Library
+"Immich uploads", with the import path `/mnt/immich-uploads`. The mount is read-only: Immich does not
+move or delete these files, and deleting an asset in Immich does not remove
+the file.
+
+Immich cannot see NFS writes from other machines through file watching. A
+periodic library scan imports new files. The scan runs every 15 minutes
+(`*/15 * * * *`, set in Administration > Settings > External Library).
 
 `immich-cluster` is the pre-migration PostgreSQL cluster on the retained mixed
 NFS volume. Keep it and its PV until a v3 restore test and observation period

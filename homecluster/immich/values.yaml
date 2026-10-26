@@ -35,6 +35,13 @@ valkey:
 
 server:
   enabled: true
+  persistence:
+    uploads:
+      type: persistentVolumeClaim
+      existingClaim: immich-uploads
+      globalMounts:
+        - path: /mnt/immich-uploads
+          readOnly: true
 
 machine-learning:
   enabled: true
